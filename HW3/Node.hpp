@@ -39,15 +39,10 @@ struct Exp : public Node {
 };
 
 struct ExpList : public Node {
-    std::vector<Exp*> expressions;
+    std::vector<Exp> expressions;
 
-    ExpList(std::vector<Exp*> expressions):
+    ExpList(std::vector<Exp> expressions):
     expressions(expressions){};
-
-        ~ExpList(){
-        for (auto exp: expressions)
-            delete exp;
-    };
 };
 
 struct Call : public Node {

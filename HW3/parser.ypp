@@ -102,7 +102,7 @@ Call:       ID LPAREN ExpList RPAREN {printProductionRule(26);}
 ;
 
 ExpList:    Exp {
-                    ExpList* expList = new ExpList(std::vector<Exp*>());
+                    ExpList* expList = new ExpList(std::vector<Exp>());
                     expList->expressions.push_back(new Exp($1->type));
                     $$ = expList; 
                 }
