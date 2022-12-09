@@ -1,0 +1,293 @@
+%{
+    #include <iostream>
+    #include "hw3_output.hpp"
+    #include "ScopeHandler.hpp"
+    #include "Node.hpp"
+    #include <string>
+    #include <memory>
+    #define YYSTYPE Node*
+    using namespace std;
+    using namespace output;
+    int yylex();
+    void yyerror(const char*);
+	extern int yylineno;
+    std::string ret_type;
+    int while_count;
+    ScopeHandler scopeHandler();
+%}
+
+%nonassoc VOID
+%nonassoc INT
+%nonassoc BYTE
+%nonassoc B
+%nonassoc BOOL
+%nonassoc TRUE
+%nonassoc FALSE
+%nonassoc RETURN
+
+%nonassoc WHILE
+%nonassoc BREAK
+%nonassoc CONTINUE
+%nonassoc SC
+%nonassoc LPAREN
+%nonassoc LBRACE
+%nonassoc RBRACE
+%nonassoc NUM
+%nonassoc STRING
+%nonassoc ID
+%nonassoc COMMA
+%nonassoc IF
+
+
+%left ASSIGN
+%left OR
+%left AND
+%left EQUAL
+%left RELOP
+%left PLUS_MINUS
+%left MUL_DIV
+%right NOT 
+%nonassoc RPAREN
+%nonassoc ELSE
+
+
+%%
+
+Program:        Funcs {printProductionRule(1);}
+;
+
+Funcs:          /*epsilon*/{printProductionRule(2);}
+                | FuncDecl Funcs {printProductionRule(3);}
+;
+
+FuncDecl:       RetType /* marker here*/ ID LPAREN Formals RPAREN LBRACE Statements RBRACE /* release marker*/{printProductionRule(4);}
+;
+
+RetType:        Type {printProductionRule(5);}
+                | VOID {printProductionRule(6);}
+;
+
+Formals:        /*epsilon*/{printProductionRule(7);}
+                | FormalsList {printProductionRule(8);}
+;
+
+FormalsList:    FormalDecl {printProductionRule(9);}
+                | FormalDecl COMMA FormalsList {printProductionRule(10);}
+;
+
+FormalDecl:     Type ID {printProductionRule(11);}
+;
+
+Statements:     Statement {printProductionRule(12);}
+                |Statements Statement {printProductionRule(13);}
+                
+;
+
+Statement:      LBRACE Statements RBRACE {printProductionRule(14);}
+                | Type ID SC {printProductionRule(15);}
+                | Type ID ASSIGN Exp SC {printProductionRule(16);}
+                | ID ASSIGN Exp SC {printProductionRule(17);}
+                | Call SC {printProductionRule(18);}
+                | RETURN SC {printProductionRule(19);}
+                | RETURN Exp SC {printProductionRule(20);}
+                | IF LPAREN Exp RPAREN Statement {printProductionRule(21);}
+                | IF LPAREN Exp RPAREN Statement ELSE Statement {printProductionRule(22);}
+                | WHILE /* marker here*/ LPAREN Exp RPAREN Statement /* release marker*/ {printProductionRule(23);}
+                | BREAK SC {printProductionRule(24);}
+                | CONTINUE SC {printProductionRule(25);}
+;
+
+Call:       ID LPAREN ExpList RPAREN {printProductionRule(26);}
+            | ID LPAREN RPAREN {printProductionRule(27);}
+;
+
+ExpList:    Exp {
+                    ExpList* expList = new ExpList(std::vector<Exp*>());
+                    expList->expressions.push_back(new Exp($1->type));
+                    $$ = expList; 
+                }
+            | Exp COMMA ExpList {
+                                    ExpList* = new ExpList($3->expressions);
+                                    expList->expressions.insert(expList.begin(),new Exp($1->type));  
+                                    $$ = expList; 
+                                }
+;
+
+Type:     INT   {
+                    $$ = new Type("INT");
+                }
+        | BYTE  {
+                    $$ = new Type("BYTE");
+                }
+        | BOOL  {
+                    $$ = new Type("BOOL");
+                }
+;
+
+
+Exp:    LPAREN Exp RPAREN   { 
+                                $$ = new Exp($2->type);
+                            }
+        | Exp IF LPAREN Exp RPAREN ELSE Exp {
+                                                if($4->type == "BOOL" and 
+                                                ($1->type == $7->type or ($1->type == "BYTE" and $7->type == "INT"))){
+                                                    $$ = new Exp($7->type);
+                                                }
+                                                else{
+                                                    output::errorMismatch(yylineno); 
+                                                    exit(0);
+                                                }
+                                            }
+        | Exp PLUS_MINUS Exp{
+                                if ($1->type == "INT" ){
+                                    if($2->type == "INT" or $2->type == "BYTE")
+                                        $$ = new Exp("INT")
+                                    else{
+                                        output::errorMismatch(yylineno); 
+                                        exit(0);
+                                    };
+                                }
+                                if else ($1->type == "BYTE"){
+                                    if($2->type == "INT")
+                                        $$ = new Exp("INT")
+                                    if else($2->type == "BYTE")
+                                        $$ = new Exp("BYTE")
+                                    else{
+                                        output::errorMismatch(yylineno); 
+                                        exit(0);
+                                    }
+                                }
+                                else{
+                                    output::errorMismatch(yylineno); 
+                                    exit(0);
+                                }
+                            }
+        | Exp MUL_DIV Exp   {
+                                if ($1->type == "INT" ){
+                                    if($2->type == "INT" or $2->type == "BYTE")
+                                        $$ = new Exp("INT")
+                                    else{
+                                        output::errorMismatch(yylineno); 
+                                        exit(0);
+                                    };
+                                }
+                                if else ($1->type == "BYTE"){
+                                    if($2->type == "INT")
+                                        $$ = new Exp("INT")
+                                    if else($2->type == "BYTE")
+                                        $$ = new Exp("BYTE")
+                                    else{
+                                        output::errorMismatch(yylineno); 
+                                        exit(0);
+                                    }
+                                }
+                                else{
+                                    output::errorMismatch(yylineno); 
+                                    exit(0);
+                                }                            
+                            }
+        | ID{  
+                TableEntry* entry =scopeHandler.findSymbol($1->name);
+                if(entry)
+                    if(entry->type.find("->") == -1)
+                        $$ = new Exp(entry->type);
+                    else{
+                        void errorUndef(yylineno, $1->name);
+                        exit(0);                        
+                    }
+                else{
+                    void errorUndef(yylineno, $1->name);
+                    exit(0);
+                }
+            }
+        | Call { 
+                    $$ = new Exp($1->type);
+               }
+        | NUM   { 
+                    $$ = new Exp("INT");
+                }
+        | NUM B {
+                    if ($1->value <= 255) 
+                        $$ = new Exp("BYTE");
+                    else{
+                        output::errorByteTooLarge(yylineno,std::to_string($1->value));
+                        exit(0);
+                    }
+                }
+        | STRING{ 
+                    $$ = new Exp("STRING"); 
+                }
+        | TRUE  { 
+                    $$ = new Exp("BOOL",); 
+                }
+        | FALSE { 
+                    $$ = new Exp("BOOL"); 
+                }
+        | NOT Exp   { 
+                        if($2->type == "BOOL")
+                            $$ = new Exp("BOOL");
+                            
+                        else{
+                            output::errorMismatch(yylineno); 
+                            exit(0);
+                            }
+                    }
+        | Exp AND Exp   {
+                            if($1->type == "BOOL" and $3->type == "BOOL")
+                                $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno); 
+                                exit(0);
+                            }     
+                        }
+        | Exp OR Exp{ 
+                        if($1->type == "BOOL" and $3->type == "BOOL")
+                            $$ = new Exp("BOOL");
+                        else{
+                            output::errorMismatch(yylineno); 
+                            exit(0);
+                        }
+                        
+                    }      
+        | Exp RELOP Exp { 
+                            if(($1->type == "INT" or $1->type == "BYTE") 
+                                and ($3->type == "INT" or $3->type == "BYTE"))
+                                        $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno);
+                                exit(0);
+                            }
+                        }
+        | Exp EQUAL Exp { 
+                            if(($1->type == "INT" or $1->type == "BYTE") 
+                                and ($3->type == "INT" or $3->type == "BYTE"))
+                                    $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno);
+                                exit(0);
+                            }
+                        }
+        | LPAREN Type RPAREN Exp{  
+                                    if ($2->type == $4->type)
+                                        $$ = new Exp($4->type);
+                                    else if ($2->type == "INT" and $4->type == "BYTE")
+                                        $$ = new Exp("INT");
+                                    else if ($2->type == "BYTE" and $4->type == "INT")
+                                        $$ = new Exp("BYTE");
+                                    else{
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }  
+                                }
+;
+
+%%
+
+void yyerror(const char*) 
+{ 
+    errorSyn(yylineno);
+    exit(0); 
+}
+int main() {
+    return yyparse();
+}
