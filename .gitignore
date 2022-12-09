@@ -6,3 +6,4 @@ HW3/CMakeLists.txt
 HW3/.vscode
 HW3/.idea
 HW3/cmake-build-debug
+HW3/main.cpp
