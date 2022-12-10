@@ -268,11 +268,9 @@ Exp:    LPAREN Exp RPAREN   {
                             }
                         }
         | LPAREN Type RPAREN Exp{  
-                                    if ($2->type == $4->type)
-                                        $$ = new Exp($4->type);
-                                    else if ($2->type == "INT" and $4->type == "BYTE")
+                                    if ($2->type == "INT" and ($4->type == "INT" or $4->type == "BYTE"))
                                         $$ = new Exp("INT");
-                                    else if ($2->type == "BYTE" and $4->type == "INT")
+                                    else if ($2->type == "BYTE" and ($4->type == "INT" or $4->type == "BYTE"))
                                         $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno);
