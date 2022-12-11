@@ -83,7 +83,7 @@ struct MulDiv : public Node {
 struct PlusMinus : public Node {
     std::string op;
 
-    PlusMinus(std::string opStr):
+    PlusMinus(std::string op):
     op(op){};
 };
 

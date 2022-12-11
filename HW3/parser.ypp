@@ -133,6 +133,10 @@ Exp:    LPAREN Exp RPAREN   {
                                                 ($1->type == $7->type or ($1->type == "BYTE" and $7->type == "INT"))){
                                                     $$ = new Exp($7->type);
                                                 }
+                                                else if($4->type == "BOOL" and 
+                                                ($1->type == $7->type or ($1->type == "INT" and $7->type == "BYTE"))){
+                                                    $$ = new Exp($1->type);
+                                                }
                                                 else{
                                                     output::errorMismatch(yylineno); 
                                                     exit(0);
