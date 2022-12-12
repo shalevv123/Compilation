@@ -103,12 +103,12 @@ Call:       ID LPAREN ExpList RPAREN {printProductionRule(26);}
 
 ExpList:    Exp {
                     ExpList* expList = new ExpList(std::vector<Exp>());
-                    expList->expressions.push_back(new Exp($1->type));
+                    expList->expressions.push_back(Exp($1->type));
                     $$ = expList; 
                 }
             | Exp COMMA ExpList {
-                                    ExpList* = new ExpList($3->expressions);
-                                    expList->expressions.insert(expList.begin(),new Exp($1->type));  
+                                    ExpList* expList = new ExpList($3->expressions);
+                                    expList->expressions.insert(expList.begin(),Exp($1->type));  
                                     $$ = expList; 
                                 }
 ;
@@ -222,7 +222,7 @@ Exp:    LPAREN Exp RPAREN   {
                     $$ = new Exp("STRING"); 
                 }
         | TRUE  { 
-                    $$ = new Exp("BOOL",); 
+                    $$ = new Exp("BOOL"); 
                 }
         | FALSE { 
                     $$ = new Exp("BOOL"); 
