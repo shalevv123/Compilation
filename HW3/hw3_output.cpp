@@ -4,6 +4,22 @@
 
 using namespace std;
 
+
+std::vector<std::string> getFuncParams(TableEntry* entry){
+    string tmp = entry->type.substr((entry->type).find("->")+3);
+    tmp.pop_back();
+    vector<string> paramVec;
+    stringstream paramStream(tmp);
+    string param;
+    while(getline(paramStream, param, ','))
+        paramVec.push_back(param);
+    return paramVec;
+}
+
+std::string getFuncReturn(TableEntry* entry){
+    return (entry->type).substr(0,(entry->type).find("->"));
+}
+
 void output::endScope(){
     cout << "---end scope---" << endl;
 }
@@ -66,7 +82,7 @@ void output::errorMismatch(int lineno){
     cout << "line " << lineno << ":" << " type mismatch" << endl;
 }
 
-void output::errorPrototypeMismatch(int lineno, const string& id, std::vector<string>& argTypes) {
+void output::errorPrototypeMissmatch(int lineno, const string& id, std::vector<string>& argTypes) {
     cout << "line " << lineno << ": prototype mismatch, function " << id << " expects arguments " << typeListToString(argTypes) << endl;
 }
 

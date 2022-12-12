@@ -3,28 +3,31 @@
 
 #include <vector>
 #include <string>
-using namespace std;
+#include "Table.hpp"
+
+std::vector<std::string> getFuncParams(TableEntry* entry);
+std::string getFuncReturn(TableEntry* entry);
 
 namespace output{
     void endScope();
-    void printID(const string& id, int offset, const string& type);
+    void printID(const std::string& id, int offset, const std::string& typerrorMismatch);
 
     /* Do not save the string returned from this function in a data structure
         as it is not dynamically allocated and will be destroyed(!) at the end of the calling scope.
     */
-    string makeFunctionType(const string& retType,const vector<string>& argTypes);
+    std::string makeFunctionType(const std::string& retType,const std::vector<std::string>& argTypes);
 
     void errorLex(int lineno);
     void errorSyn(int lineno);
-    void errorUndef(int lineno, const string& id);
-    void errorDef(int lineno, const string& id);
-    void errorUndefFunc(int lineno, const string& id);
+    void errorUndef(int lineno, const std::string& id);
+    void errorDef(int lineno, const std::string& id);
+    void errorUndefFunc(int lineno, const std::string& id);
     void errorMismatch(int lineno);
-    void errorPrototypeMismatch(int lineno, const string& id, vector<string>& argTypes);
+    void errorPrototypeMissmatch(int lineno, const std::string& id, std::vector<std::string>& argTypes);
     void errorUnexpectedBreak(int lineno);
     void errorUnexpectedContinue(int lineno);
     void errorMainMissing();
-    void errorByteTooLarge(int lineno, const string& value);
+    void errorByteTooLarge(int lineno, const std::string& value);
 
 }
 

@@ -12,7 +12,10 @@
     void yyerror(const char*);
 	extern int yylineno;
     std::string ret_type;
-    int while_count;
+    std::string func_name;
+    std::vector<std::string> argNames;
+    std::vector<std::string> argTypes;
+    int while_count = 0;
     ScopeHandler scopeHandler();
 %}
 
@@ -52,54 +55,181 @@
 
 
 %%
-
-Program:        Funcs {printProductionRule(1);}
+M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
 ;
 
-Funcs:          /*epsilon*/{printProductionRule(2);}
-                | FuncDecl Funcs {printProductionRule(3);}
+M_End_Scope:   /*epsilon*/ {scopeHandler.endScope();}
 ;
 
-FuncDecl:       RetType /* marker here*/ ID LPAREN Formals RPAREN LBRACE Statements RBRACE /* release marker*/{printProductionRule(4);}
+M_While:        /*epsilon*/ {while_count++;}
 ;
 
-RetType:        Type {printProductionRule(5);}
-                | VOID {printProductionRule(6);}
+M_Add_Function: /*epsilon*/ { 
+                                if(!scopeHandler.addFunction(func_name, ret_type, argNames, argTypes)){
+                                    output::errorDef(yylineno, func_name);
+                                    exit(0);   
+                                }
+                            }
 ;
 
-Formals:        /*epsilon*/{printProductionRule(7);}
-                | FormalsList {printProductionRule(8);}
+
+
+Program:        Funcs {}
 ;
 
-FormalsList:    FormalDecl {printProductionRule(9);}
-                | FormalDecl COMMA FormalsList {printProductionRule(10);}
+Funcs:          /*epsilon*/{}
+                | FuncDecl Funcs {}
 ;
 
-FormalDecl:     Type ID {printProductionRule(11);}
+FuncDecl:       RetType ID {func_name = $2->name;} LPAREN Formals RPAREN M_Add_Function LBRACE M_New_Scope Statements RBRACE /* release marker*/    {
+                                                                                                                                                        ret_type = "";
+                                                                                                                                                        func_name = "";
+                                                                                                                                                        argNames.clear();
+                                                                                                                                                        argTypes.clear();
+                                                                                                                                                        scopeHandler.endScope();
+                                                                                                                                                    }
 ;
 
-Statements:     Statement {printProductionRule(12);}
-                |Statements Statement {printProductionRule(13);}
+RetType:        Type{
+                        ret_type = $1->type;
+                    }
+                | VOID  {
+                            ret_type = "VOID";
+                        }
+;
+
+Formals:        /*epsilon*/{}
+                | FormalsList {}
+;
+
+FormalsList:    FormalDecl {}
+                | FormalDecl COMMA FormalsList {}
+;
+
+FormalDecl:     Type ID {
+                            argTypes.insert(argTypes.begin(), $1->type);
+                            argNames.insert(argNames.begin(), $2->name);
+                        }
+;
+
+Statements:     Statement {}
+                |Statements Statement {}
                 
 ;
 
-Statement:      LBRACE Statements RBRACE {printProductionRule(14);}
-                | Type ID SC {printProductionRule(15);}
-                | Type ID ASSIGN Exp SC {printProductionRule(16);}
-                | ID ASSIGN Exp SC {printProductionRule(17);}
-                | Call SC {printProductionRule(18);}
-                | RETURN SC {printProductionRule(19);}
-                | RETURN Exp SC {printProductionRule(20);}
-                | IF LPAREN Exp RPAREN Statement {printProductionRule(21);}
-                | IF LPAREN Exp RPAREN Statement ELSE Statement {printProductionRule(22);}
-                | WHILE /* marker here*/ LPAREN Exp RPAREN Statement /* release marker*/ {printProductionRule(23);}
-                | BREAK SC {printProductionRule(24);}
-                | CONTINUE SC {printProductionRule(25);}
+Statement:      LBRACE M_New_Scope Statements RBRACE{
+                                                        scopeHandler.endScope();
+                                                    }
+                | Type ID SC{
+                                if (!scopeHandler.addSymbol($2->name,$1->type);){
+                                    output::errorDef(yylineno, $2->name);
+                                    exit(0); 
+                                }     
+                            }
+                | Type ID ASSIGN Exp SC {
+                                            if(($1->type != $4->type) and (($4->type != "BYTE") 
+                                                or ($1->type != "INT"))){
+                                                output::errorMismatch(yylineno);
+                                                exit(0);
+                                            }
+                                            if (!scopeHandler.addSymbol($2->name,$1->type);){
+                                                output::errorDef(yylineno, $2->name);
+                                                exit(0); 
+                                            }
+                                            
+                                        }
+                | ID ASSIGN Exp SC  {
+                                        TableEntry* entry = scopeHandler.findSymbol($1->name);
+                                        if (!entry){
+                                            output::errorUndef(yylineno, $1->name);
+                                            exit(0); 
+                                        }
+                                        if((entry->type != $3.type) and
+                                            ((entry->type != "INT") or ($3.type != "BYTE"))){
+                                                output::errorMismatch(yylineno);
+                                                exit(0); 
+                                        }
+                                    }
+                | Call SC {}
+                | RETURN SC {
+                                if(ret_type != "VOID"){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                                    
+                            }
+                | RETURN Exp SC {
+                                if(ret_type != $2->type){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                                }
+                | IF LPAREN Exp RPAREN M_New_Scope Statement { scopeHandler.endScope(); }
+                | IF LPAREN Exp RPAREN M_New_Scope Statement M_End_Scope ELSE M_New_Scope Statement {
+                                                                                                        scopeHandler.endScope();
+                                                                                                    }
+                | WHILE M_While LPAREN Exp RPAREN M_New_Scope Statement{
+                                                                            while_count--;
+                                                                            scopeHandler.endScope();
+                                                                        }
+                | BREAK SC {
+                             if(!while_count){
+                                output::errorUnexpectedBreak(yylineno);
+                                exit(0);
+                             }
+                            }
+                | CONTINUE SC   {
+                                 if (!while_count){
+                                    output::errorUnexpectedContinue(yylineno);
+                                    exit(0);
+                                 }
+                                }
 ;
 
-Call:       ID LPAREN ExpList RPAREN {printProductionRule(26);}
-            | ID LPAREN RPAREN {printProductionRule(27);}
-;
+Call:       ID LPAREN ExpList RPAREN{
+                                        TableEntry* entry =scopeHandler.findSymbol($1->name);
+                                        if (!entry){
+                                            output::errorUndefFunc(yylineno, const $1->name);
+                                            exit(0);
+                                        }
+                                        if(entry->type.find("->") == -1){
+                                            output::errorUndefFunc(yylineno, const $1->name);
+                                            exit(0);
+                                        }
+                                        std::vector<std::string> params = getFuncParams(entry);
+                                        if($3->expressions.size() != params.size()){
+                                            output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                            exit(0);
+                                        } 
+                                        int i = 0;
+                                        for(auto& exp : $3->expressions){
+                                            if((exp->type != params[i]) and ((exp->type != "BYTE") 
+                                                or (params[i] != "INT"))){
+                                                output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                                exit(0);
+                                            }
+                                            ++i;
+                                        }
+                                        $$->type == getFuncReturn(entry);                                    
+                                    }
+            | ID LPAREN RPAREN  {
+                                    TableEntry* entry =scopeHandler.findSymbol($1->name);
+                                    if (!entry){
+                                            output::errorUndefFunc(yylineno, const $1->name);
+                                            exit(0);
+                                    }
+                                    if(entry->type.find("->") == -1){
+                                        output::errorUndefFunc(yylineno, const $1->name);
+                                        exit(0);
+                                    }
+                                    vector<string> params = getFuncParams(entry);
+                                    if (params.size() != 0){
+                                        output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                        exit(0);
+                                    }
+                                    $$->type == getFuncReturn(entry);  
+                                }
+;   
 
 ExpList:    Exp {
                     ExpList* expList = new ExpList(std::vector<Exp>());
@@ -107,8 +237,8 @@ ExpList:    Exp {
                     $$ = expList; 
                 }
             | Exp COMMA ExpList {
-                                    ExpList* expList = new ExpList($3->expressions);
-                                    expList->expressions.insert(expList.begin(),Exp($1->type));  
+                                    ExpList* expList = new ExpList($3->expressions); //potential bug
+                                    expList->expressions.insert(expList.begin(), Exp($1->type));  
                                     $$ = expList; 
                                 }
 ;
@@ -134,7 +264,7 @@ Exp:    LPAREN Exp RPAREN   {
                                                     $$ = new Exp($7->type);
                                                 }
                                                 else if($4->type == "BOOL" and 
-                                                ($1->type == $7->type or ($1->type == "INT" and $7->type == "BYTE"))){
+                                                ($1->type == "INT" and $7->type == "BYTE")){
                                                     $$ = new Exp($1->type);
                                                 }
                                                 else{

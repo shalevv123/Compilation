@@ -29,7 +29,7 @@ ScopeHandler::~ScopeHandler()
         output::errorMainMissing();
         exit(0);
     }
-    if((mainSym->type).substr((mainSym->type).find("->")+2) != "VOID"){
+    if(getFuncReturn(mainSym) != "VOID"){
         output::errorMainMissing();
         exit(0);
     }
