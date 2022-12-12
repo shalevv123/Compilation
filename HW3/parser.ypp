@@ -5,7 +5,7 @@
     #include "Node.hpp"
     #include <string>
     #include <memory>
-    #define YYSTYPE Node*
+    #define YYSTYPE Node*;
     using namespace std;
     using namespace output;
     int yylex();
@@ -275,7 +275,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp PLUS_MINUS Exp{
                                 if ($1->type == "INT" ){
                                     if($2->type == "INT" or $2->type == "BYTE")
-                                        $$ = new Exp("INT")
+                                        $$ = new Exp("INT");
                                     else{
                                         output::errorMismatch(yylineno); 
                                         exit(0);
@@ -283,9 +283,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 }
                                 if else ($1->type == "BYTE"){
                                     if($2->type == "INT")
-                                        $$ = new Exp("INT")
+                                        $$ = new Exp("INT");
                                     if else($2->type == "BYTE")
-                                        $$ = new Exp("BYTE")
+                                        $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno); 
                                         exit(0);
@@ -299,7 +299,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp MUL_DIV Exp   {
                                 if ($1->type == "INT" ){
                                     if($2->type == "INT" or $2->type == "BYTE")
-                                        $$ = new Exp("INT")
+                                        $$ = new Exp("INT");
                                     else{
                                         output::errorMismatch(yylineno); 
                                         exit(0);
@@ -307,9 +307,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 }
                                 if else ($1->type == "BYTE"){
                                     if($2->type == "INT")
-                                        $$ = new Exp("INT")
+                                        $$ = new Exp("INT");
                                     if else($2->type == "BYTE")
-                                        $$ = new Exp("BYTE")
+                                        $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno); 
                                         exit(0);
