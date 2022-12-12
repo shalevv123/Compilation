@@ -13,4 +13,4 @@ HW3/parser.tab.hpp
 HW3/lex.yy.c
 HW3/Makefile
 HW3/hw3
-tests
+HW3/tests
