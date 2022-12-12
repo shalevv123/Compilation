@@ -20,7 +20,7 @@ void checkMain(ScopeHandler scopeHandler){
     }
 }
 std::vector<std::string> getFuncParams(TableEntry* entry){
-    string tmp = entry->type.substr(1,(entry->type).find("->")-1);
+    string tmp = entry->type.substr(1,(entry->type).find("->")-2);
     vector<string> paramVec;
     stringstream paramStream(tmp);
     string param;
