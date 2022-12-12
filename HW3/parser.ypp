@@ -64,13 +64,15 @@ Funcs:          /*epsilon*/{}
                 | FuncDecl Funcs {}
 ;
 
-FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Formals RPAREN M_Add_Function LBRACE M_New_Scope Statements RBRACE /* release marker*/    {
-                                                                                                                                                        ret_type = "";
-                                                                                                                                                        func_name = "";
-                                                                                                                                                        argNames.clear();
-                                                                                                                                                        argTypes.clear();
-                                                                                                                                                        scopeHandler.endScope();
-                                                                                                                                                    }
+FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Formals RPAREN M_Add_Function /*a new scope is created*/
+                LBRACE Statements RBRACE /* release marker*/    {
+                                                                    scopeHandler.endScope();
+                                                                    ret_type = "";
+                                                                    func_name = "";
+                                                                    argNames.clear();
+                                                                    argTypes.clear();
+                                                                    
+                                                                }
 ;
 
 RetType:        Type{
