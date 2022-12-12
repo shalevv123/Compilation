@@ -2,9 +2,10 @@
 
 /* Declarations section */
 #include <stdio.h>
+#include "Node.hpp"
 #include "parser.tab.hpp"
 #include "hw3_output.hpp"
-#include "Node.hpp"
+
 %}
 
 %option yylineno

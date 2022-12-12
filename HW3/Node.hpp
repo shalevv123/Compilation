@@ -4,6 +4,7 @@
 #include <vector>
 struct Node{};
 
+
 struct Type : public Node {
     std::string type;
 
@@ -86,5 +87,7 @@ struct PlusMinus : public Node {
     PlusMinus(std::string op):
     op(op){};
 };
+
+#define YYSTYPE Node*
 
 #endif //Node

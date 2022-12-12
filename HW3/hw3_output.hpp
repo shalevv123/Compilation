@@ -23,7 +23,7 @@ namespace output{
     void errorDef(int lineno, const std::string& id);
     void errorUndefFunc(int lineno, const std::string& id);
     void errorMismatch(int lineno);
-    void errorPrototypeMissmatch(int lineno, const std::string& id, std::vector<std::string>& argTypes);
+    void errorPrototypeMismatch(int lineno, const std::string& id, std::vector<std::string>& argTypes);
     void errorUnexpectedBreak(int lineno);
     void errorUnexpectedContinue(int lineno);
     void errorMainMissing();

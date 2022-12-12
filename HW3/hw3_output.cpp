@@ -82,7 +82,7 @@ void output::errorMismatch(int lineno){
     cout << "line " << lineno << ":" << " type mismatch" << endl;
 }
 
-void output::errorPrototypeMissmatch(int lineno, const string& id, std::vector<string>& argTypes) {
+void output::errorPrototypeMismatch(int lineno, const string& id, std::vector<string>& argTypes) {
     cout << "line " << lineno << ": prototype mismatch, function " << id << " expects arguments " << typeListToString(argTypes) << endl;
 }
 
