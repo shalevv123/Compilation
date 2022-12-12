@@ -6,8 +6,7 @@ using namespace std;
 
 
 std::vector<std::string> getFuncParams(TableEntry* entry){
-    string tmp = entry->type.substr((entry->type).find("->")+3);
-    tmp.pop_back();
+    string tmp = entry->type.substr(1,(entry->type).find("->")-1);
     vector<string> paramVec;
     stringstream paramStream(tmp);
     string param;
@@ -17,7 +16,7 @@ std::vector<std::string> getFuncParams(TableEntry* entry){
 }
 
 std::string getFuncReturn(TableEntry* entry){
-    return (entry->type).substr(0,(entry->type).find("->"));
+    return (entry->type).substr((entry->type).find("->")+2);
 }
 
 void output::endScope(){
