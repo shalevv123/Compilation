@@ -55,25 +55,6 @@
 
 
 %%
-M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
-;
-
-M_End_Scope:   /*epsilon*/ {scopeHandler.endScope();}
-;
-
-M_While:        /*epsilon*/ {while_count++;}
-;
-
-M_Add_Function: /*epsilon*/ { 
-                                if(!scopeHandler.addFunction(func_name, ret_type, argNames, argTypes)){
-                                    output::errorDef(yylineno, func_name);
-                                    exit(0);   
-                                }
-                            }
-;
-
-
-
 Program:        Funcs {}
 ;
 
@@ -110,6 +91,23 @@ FormalDecl:     Type ID {
                             argTypes.insert(argTypes.begin(), $1->type);
                             argNames.insert(argNames.begin(), $2->name);
                         }
+;
+
+M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
+;
+
+M_End_Scope:   /*epsilon*/ {scopeHandler.endScope();}
+;
+
+M_While:        /*epsilon*/ {while_count++;}
+;
+
+M_Add_Function: /*epsilon*/ { 
+                                if(!scopeHandler.addFunction(func_name, ret_type, argNames, argTypes)){
+                                    output::errorDef(yylineno, func_name);
+                                    exit(0);   
+                                }
+                            }
 ;
 
 Statements:     Statement {}
