@@ -9,7 +9,6 @@
 class ScopeHandler{
 public:
     ScopeHandler();
-    ~ScopeHandler();
     void newScope();
     void endScope();
     TableEntry* findSymbol(const std::string& name);

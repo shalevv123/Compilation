@@ -54,7 +54,10 @@
 
 
 %%
-Program:        Funcs {}
+Program:        Funcs   {
+                            checkMain(scopeHandler);
+                            scopeHandler.endScope();
+                        }
 ;
 
 Funcs:          /*epsilon*/{}

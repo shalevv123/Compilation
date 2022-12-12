@@ -4,7 +4,9 @@
 #include <vector>
 #include <string>
 #include "Table.hpp"
+#include "ScopeHandler.hpp"
 
+void checkMain(ScopeHandler scopeHandler);
 std::vector<std::string> getFuncParams(TableEntry* entry);
 std::string getFuncReturn(TableEntry* entry);
 
