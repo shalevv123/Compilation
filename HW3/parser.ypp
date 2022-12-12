@@ -161,6 +161,10 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     
                             }
                 | RETURN Exp SC {
+                                if(ret_type == "VOID"){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
                                 if(ret_type != static_cast<Exp*>($2)->type and ((static_cast<Exp*>($2)->type != "BYTE") 
                                     or (ret_type != "INT"))){
                                     output::errorMismatch(yylineno);

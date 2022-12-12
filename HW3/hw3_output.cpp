@@ -18,6 +18,11 @@ void checkMain(ScopeHandler scopeHandler){
         output::errorMainMissing();
         exit(0);
     }
+    if(getFuncParams(mainSym).size() != 0){
+        output::errorMainMissing();
+        exit(0);
+    }
+
 }
 std::vector<std::string> getFuncParams(TableEntry* entry){
     string tmp = entry->type.substr(1,(entry->type).find("->")-2);
