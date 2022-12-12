@@ -163,7 +163,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                 }
                                 }
                 | IF LPAREN Exp RPAREN M_New_Scope Statement { scopeHandler.endScope(); }
-                | IF LPAREN Exp RPAREN M_New_Scope Statement M_End_Scope ELSE M_New_Scope Statement {
+                | IF LPAREN Exp RPAREN M_New_Scope Statement ELSE M_End_Scope M_New_Scope Statement {
                                                                                                         scopeHandler.endScope();
                                                                                                     }
                 | WHILE M_While LPAREN Exp RPAREN M_New_Scope Statement{

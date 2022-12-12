@@ -7,4 +7,5 @@ HW3/.vscode
 HW3/.idea
 HW3/cmake-build-debug
 HW3/main.cpp
-parser.output
+HW3/parser.output
+HW3/parser.tab.cpp
