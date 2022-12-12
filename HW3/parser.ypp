@@ -92,8 +92,8 @@ FormalsList:    FormalDecl {}
 ;
 
 FormalDecl:     Type ID {
-                            argTypes.insert(argTypes.begin(), static_cast<Type*>($1)->type);
-                            argNames.insert(argNames.begin(), static_cast<Id*>($2)->name);
+                            argTypes.push_back(argTypes.begin(), static_cast<Type*>($1)->type);
+                            argNames.push_back(argNames.begin(), static_cast<Id*>($2)->name);
                         }
 ;
 
