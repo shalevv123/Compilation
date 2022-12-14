@@ -59,7 +59,6 @@ continue                                                return CONTINUE;
                                                         }     
 \"([^\n\r\\\"]|\\.)*\"                                  {yylval = new String(yytext);
                                                          return STRING;}
-\"([^\n\r\\\"]|\\.)*\\?                                 ;
 {whitespace}                                            ;
 .                                                       {output::errorLex(yylineno); exit(0);}
 %%
