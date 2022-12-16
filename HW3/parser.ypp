@@ -107,9 +107,9 @@ M_While:        /*epsilon*/ {while_count++;}
 ;
 
 M_Add_Function: /*epsilon*/ { 
-                                std::string bad_name = scopeHandler.addFunction(func_name, ret_type, argNames, argTypes);
+                                std::shared_ptr<std::string> bad_name = scopeHandler.addFunction(func_name, ret_type, argNames, argTypes);
                                 if(bad_name){
-                                    output::errorDef(yylineno, bad_name);
+                                    output::errorDef(yylineno, *bad_name);
                                     exit(0);   
                                 }
                             }
