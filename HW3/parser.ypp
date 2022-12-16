@@ -146,6 +146,10 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                             output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                                             exit(0); 
                                         }
+                                        if(entry->type.find("->") != -1){
+                                            output::errorUndef(yylineno, static_cast<Id*>($1)->name);
+                                            exit(0);
+                                        }
                                         if((entry->type != static_cast<Exp*>($3)->type) and
                                             ((entry->type != "INT") or (static_cast<Exp*>($3)->type != "BYTE"))){
                                                 output::errorMismatch(yylineno);
