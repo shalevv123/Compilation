@@ -5,8 +5,8 @@
 #include "Node.hpp"
 #include "parser.tab.hpp"
 #include "hw3_output.hpp"
-#incldue "ScopeHandler.hpp"
-extern ScopeHandler scopeHandler
+#include "ScopeHandler.hpp"
+extern ScopeHandler scopeHandler;
 %}
 
 %option yylineno
