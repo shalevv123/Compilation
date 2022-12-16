@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <iostream>
+extern int yylineno;
 using namespace std;
 ScopeHandler::ScopeHandler():
         offsetStack(vector<int>()), tableStack(vector<Table>())
@@ -57,16 +58,13 @@ std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, 
 {
     if (findSymbol(name))
         return make_shared<std::string>(name);
-    for (const string& argname : argnames)
-    {
-        if(findSymbol(argname))
-            return make_shared<std::string>(argname);
-    }
     tableStack.back().addEntry(name, output::makeFunctionType(returnType, argtypes), 0);
     newScope();
     int negCounter= -1;
     for (int it = 0; it<argnames.size(); it++)
     {
+        if(findSymbol(argnames[it]))
+            return make_shared<std::string>(argnames[it]);
         tableStack.back().addEntry(argnames[it], argtypes[it], negCounter);
         negCounter--;
     }
