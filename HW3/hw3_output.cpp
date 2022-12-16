@@ -4,26 +4,7 @@
 #include "ScopeHandler.hpp"
 using namespace std;
 
-void checkMain(ScopeHandler scopeHandler){
-        TableEntry* mainSym = scopeHandler.findSymbol("main");
-    if(!mainSym){
-        output::errorMainMissing();
-        exit(0);
-    }
-    if ((mainSym->type).find("->") == -1){
-        output::errorMainMissing();
-        exit(0);
-    }
-    if(getFuncReturn(mainSym) != "VOID"){
-        output::errorMainMissing();
-        exit(0);
-    }
-    if(getFuncParams(mainSym).size() != 0){
-        output::errorMainMissing();
-        exit(0);
-    }
 
-}
 std::vector<std::string> getFuncParams(TableEntry* entry){
     string tmp = entry->type.substr(1,(entry->type).find("->")-2);
     vector<string> paramVec;

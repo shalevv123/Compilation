@@ -19,6 +19,28 @@ ScopeHandler::ScopeHandler():
     tableStack.pop_back();
 }
 
+ScopeHandler::~ScopeHandler(){
+    if (!error){
+        TableEntry* mainSym = findSymbol("main");
+        if(!mainSym){
+            output::errorMainMissing();
+            exit(0);
+        }
+        if ((mainSym->type).find("->") == -1){
+            output::errorMainMissing();
+            exit(0);
+        }
+        if(getFuncReturn(mainSym) != "VOID"){
+            output::errorMainMissing();
+            exit(0);
+        }
+        if(getFuncParams(mainSym).size() != 0){
+            output::errorMainMissing();
+            exit(0);
+        }
+        endScope();
+    }
+}
 void ScopeHandler::newScope()
 {
     offsetStack.push_back(offsetStack.back());
@@ -69,4 +91,7 @@ std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, 
         negCounter--;
     }
     return nullptr;
+}
+void ScopeHandler::errorHappened(){
+    error = true;
 }
