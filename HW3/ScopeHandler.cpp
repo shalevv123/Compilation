@@ -53,14 +53,14 @@ bool ScopeHandler::addSymbol(const std::string& name, std::string type)
     return true;
 }
 
-bool ScopeHandler::addFunction(const std::string& name, const std::string& returnType, const std::vector<std::string>& argnames, const std::vector<std::string>& argtypes)
+std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, const std::string& returnType, const std::vector<std::string>& argnames, const std::vector<std::string>& argtypes)
 {
     if (findSymbol(name))
-        return false;
+        return make_shared<std::string>(name);
     for (const string& argname : argnames)
     {
         if(findSymbol(argname))
-            return false;
+            return make_shared<std::string>(argname);
     }
     tableStack.back().addEntry(name, output::makeFunctionType(returnType, argtypes), 0);
     newScope();
@@ -70,5 +70,5 @@ bool ScopeHandler::addFunction(const std::string& name, const std::string& retur
         tableStack.back().addEntry(argnames[it], argtypes[it], negCounter);
         negCounter--;
     }
-    return true;
+    return nullptr;
 }
