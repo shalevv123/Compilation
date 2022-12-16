@@ -5,7 +5,7 @@
     #include "Node.hpp"
     #include <string>
     #include <memory>
-    #define YYDEBUG 1
+    //#define YYDEBUG 1
     using namespace std;
     using namespace output;
     int yylex();
@@ -473,6 +473,6 @@ void yyerror(const char*)
     exit(0); 
 }
 int main() {
-    yydebug = 1;
+    //yydebug = 1;
     return yyparse();
 }
