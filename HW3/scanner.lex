@@ -5,7 +5,8 @@
 #include "Node.hpp"
 #include "parser.tab.hpp"
 #include "hw3_output.hpp"
-
+#incldue "ScopeHandler.hpp"
+extern ScopeHandler scopeHandler
 %}
 
 %option yylineno
@@ -60,6 +61,6 @@ continue                                                return CONTINUE;
 \"([^\n\r\\\"]|\\.)*\"                                  {yylval = new String(yytext);
                                                          return STRING;}
 {whitespace}                                            ;
-.                                                       {output::errorLex(yylineno); exit(0);}
+.                                                       {output::errorLex(yylineno); scopeHandler.errorHappened(); exit(0);}
 %%
 
