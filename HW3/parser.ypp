@@ -43,6 +43,7 @@
 
 
 %left ASSIGN
+%right TERNARY
 %left OR
 %left AND
 %left EQUAL
@@ -293,7 +294,8 @@ M_Bool_Exp: Exp {
 Exp:    LPAREN Exp RPAREN   { 
                                 $$ = new Exp(static_cast<Exp*>($2)->type);
                             }
-        | Exp IF LPAREN M_Bool_Exp RPAREN ELSE Exp {
+        | Exp IF LPAREN M_Bool_Exp RPAREN ELSE Exp %prec TERNARY
+                                            {
                                                 if(static_cast<Exp*>($4)->type == "BOOL" and 
                                                 (static_cast<Exp*>($1)->type == static_cast<Exp*>($7)->type or (static_cast<Exp*>($1)->type == "BYTE" and static_cast<Exp*>($7)->type == "INT"))){
                                                     $$ = new Exp(static_cast<Exp*>($7)->type);
