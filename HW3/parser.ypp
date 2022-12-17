@@ -56,7 +56,28 @@
 
 
 %%
-Program:        Funcs   {}
+Program:        Funcs   {
+                            if(yychar == YYEOF){
+                                        TableEntry* mainSym = scopeHandler.findSymbol("main");
+                                        if(!mainSym){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if ((mainSym->type).find("->") == -1){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if(getFuncReturn(mainSym) != "VOID"){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if(getFuncParams(mainSym).size() != 0){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        scopeHandler.endScope();
+                            }
+                        }
 ;
 
 Funcs:          /*epsilon*/{}
@@ -108,7 +129,6 @@ M_Add_Function: /*epsilon*/ {
                                 std::shared_ptr<std::string> bad_name = scopeHandler.addFunction(func_name, ret_type, argNames, argTypes);
                                 if(bad_name){
                                     output::errorDef(yylineno, *bad_name);
-                                    scopeHandler.errorHappened();
                                     exit(0);   
                                 }
                             }
@@ -125,7 +145,6 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                 | Type ID SC{
                                 if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type)){
                                     output::errorDef(yylineno, static_cast<Id*>($2)->name);
-                                    scopeHandler.errorHappened();
                                     exit(0); 
                                 }     
                             }
@@ -133,12 +152,10 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                             if((static_cast<Type*>($1)->type != static_cast<Exp*>($4)->type) and ((static_cast<Exp*>($4)->type != "BYTE") 
                                                 or (static_cast<Type*>($1)->type != "INT"))){
                                                 output::errorMismatch(yylineno);
-                                                scopeHandler.errorHappened();
                                                 exit(0);
                                             }
                                             if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type)){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
-                                                scopeHandler.errorHappened();
                                                 exit(0); 
                                             }
                                             
@@ -147,18 +164,15 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                                         if (!entry){
                                             output::errorUndef(yylineno, static_cast<Id*>($1)->name);
-                                            scopeHandler.errorHappened();
                                             exit(0); 
                                         }
                                         if(entry->type.find("->") != -1){
                                             output::errorUndef(yylineno, static_cast<Id*>($1)->name);
-                                            scopeHandler.errorHappened();
                                             exit(0);
                                         }
                                         if((entry->type != static_cast<Exp*>($3)->type) and
                                             ((entry->type != "INT") or (static_cast<Exp*>($3)->type != "BYTE"))){
                                                 output::errorMismatch(yylineno);
-                                                scopeHandler.errorHappened();
                                                 exit(0); 
                                         }
                                     }
@@ -166,7 +180,6 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                 | RETURN SC {
                                 if(ret_type != "VOID"){
                                     output::errorMismatch(yylineno);
-                                    scopeHandler.errorHappened();
                                     exit(0);
                                 }
                                     
@@ -174,13 +187,11 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                 | RETURN Exp SC {
                                 if(ret_type == "VOID"){
                                     output::errorMismatch(yylineno);
-                                    scopeHandler.errorHappened();
                                     exit(0);
                                 }
                                 if(ret_type != static_cast<Exp*>($2)->type and ((static_cast<Exp*>($2)->type != "BYTE") 
                                     or (ret_type != "INT"))){
                                     output::errorMismatch(yylineno);
-                                    scopeHandler.errorHappened();
                                     exit(0);
                                 }
                                 }
@@ -193,14 +204,12 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                 | BREAK SC {
                              if(!while_count){
                                 output::errorUnexpectedBreak(yylineno);
-                                scopeHandler.errorHappened();
                                 exit(0);
                              }
                             }
                 | CONTINUE SC   {
                                  if (!while_count){
                                     output::errorUnexpectedContinue(yylineno);
-                                    scopeHandler.errorHappened();
                                     exit(0);
                                  }
                                 }
@@ -210,18 +219,15 @@ Call:       ID LPAREN ExpList RPAREN{
                                         TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                                         if (!entry){
                                             output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
-                                            scopeHandler.errorHappened();
                                             exit(0);
                                         }
                                         if(entry->type.find("->") == -1){
                                             output::errorUndefFunc(yylineno, static_cast<Id*>($1)->name);
-                                            scopeHandler.errorHappened();
                                             exit(0);
                                         }
                                         std::vector<std::string> params = getFuncParams(entry);
                                         if(static_cast<ExpList*>($3)->expressions.size() != params.size()){
                                             output::errorPrototypeMismatch(yylineno, entry->name, params);
-                                            scopeHandler.errorHappened();
                                             exit(0);
                                         } 
                                         int i = 0;
@@ -229,7 +235,6 @@ Call:       ID LPAREN ExpList RPAREN{
                                             if((exp.type != params[i]) and ((exp.type != "BYTE") 
                                                 or (params[i] != "INT"))){
                                                 output::errorPrototypeMismatch(yylineno, entry->name, params);
-                                                scopeHandler.errorHappened();
                                                 exit(0);
                                             }
                                             ++i;
@@ -240,18 +245,15 @@ Call:       ID LPAREN ExpList RPAREN{
                                     TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                                     if (!entry){
                                             output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
-                                            scopeHandler.errorHappened();
                                             exit(0);
                                     }
                                     if(entry->type.find("->") == -1){
                                         output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
-                                        scopeHandler.errorHappened();
                                         exit(0);
                                     }
                                     vector<string> params = getFuncParams(entry);
                                     if (params.size() != 0){
                                         output::errorPrototypeMismatch(yylineno, entry->name, params);
-                                        scopeHandler.errorHappened();
                                         exit(0);
                                     }
                                     $$ = new Call(getFuncReturn(entry));   
@@ -284,7 +286,6 @@ Type:     INT   {
 M_Bool_Exp: Exp {
                     if(static_cast<Exp*>($1)->type != "BOOL"){
                         output::errorMismatch(yylineno);
-                        scopeHandler.errorHappened();
                         exit(0);
                     }
                     $$ = new Exp(static_cast<Exp*>($1)->type);
@@ -306,7 +307,6 @@ Exp:    LPAREN Exp RPAREN   {
                                                 }
                                                 else{
                                                     output::errorMismatch(yylineno);
-                                                    scopeHandler.errorHappened(); 
                                                     exit(0);
                                                 }
                                             }
@@ -316,7 +316,6 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("INT");
                                     else{
                                         output::errorMismatch(yylineno);
-                                        scopeHandler.errorHappened(); 
                                         exit(0);
                                     }
                                 }
@@ -327,13 +326,11 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno);
-                                        scopeHandler.errorHappened(); 
                                         exit(0);
                                     }
                                 }
                                 else{
                                     output::errorMismatch(yylineno);
-                                    scopeHandler.errorHappened(); 
                                     exit(0);
                                 }
                             }
@@ -343,7 +340,6 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("INT");
                                     else{
                                         output::errorMismatch(yylineno);
-                                        scopeHandler.errorHappened(); 
                                         exit(0);
                                     };
                                 }
@@ -354,13 +350,11 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno); 
-                                        scopeHandler.errorHappened();
                                         exit(0);
                                     }
                                 }
                                 else{
                                     output::errorMismatch(yylineno); 
-                                    scopeHandler.errorHappened();
                                     exit(0);
                                 }                            
                             }
@@ -371,12 +365,10 @@ Exp:    LPAREN Exp RPAREN   {
                         $$ = new Exp(entry->type);
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
-                        scopeHandler.errorHappened();
                         exit(0);                        
                     }
                 else{
                     output::errorUndef(yylineno, static_cast<Id*>($1)->name);
-                    scopeHandler.errorHappened();
                     exit(0);
                 }
             }
@@ -391,7 +383,6 @@ Exp:    LPAREN Exp RPAREN   {
                         $$ = new Exp("BYTE");
                     else{
                         output::errorByteTooLarge(yylineno,std::to_string(static_cast<Num*>($1)->value));
-                        scopeHandler.errorHappened();
                         exit(0);
                     }
                 }
@@ -410,7 +401,6 @@ Exp:    LPAREN Exp RPAREN   {
                             
                         else{
                             output::errorMismatch(yylineno);
-                            scopeHandler.errorHappened(); 
                             exit(0);
                             }
                     }
@@ -419,7 +409,6 @@ Exp:    LPAREN Exp RPAREN   {
                                 $$ = new Exp("BOOL");
                             else{
                                 output::errorMismatch(yylineno);
-                                scopeHandler.errorHappened(); 
                                 exit(0);
                             }     
                         }
@@ -428,7 +417,6 @@ Exp:    LPAREN Exp RPAREN   {
                             $$ = new Exp("BOOL");
                         else{
                             output::errorMismatch(yylineno);
-                            scopeHandler.errorHappened(); 
                             exit(0);
                         }
                         
@@ -439,7 +427,6 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("BOOL");
                             else{
                                 output::errorMismatch(yylineno);
-                                scopeHandler.errorHappened();
                                 exit(0);
                             }
                         }
@@ -449,7 +436,6 @@ Exp:    LPAREN Exp RPAREN   {
                                     $$ = new Exp("BOOL");
                             else{
                                 output::errorMismatch(yylineno);
-                                scopeHandler.errorHappened();
                                 exit(0);
                             }
                         }
@@ -460,7 +446,6 @@ Exp:    LPAREN Exp RPAREN   {
                                         $$ = new Exp("BYTE");
                                     else{
                                         output::errorMismatch(yylineno);
-                                        scopeHandler.errorHappened();
                                         exit(0);
                                     }  
                                 }
@@ -471,7 +456,6 @@ Exp:    LPAREN Exp RPAREN   {
 void yyerror(const char*) 
 { 
     errorSyn(yylineno);
-    scopeHandler.errorHappened();
     exit(0); 
 }
 int main() {
