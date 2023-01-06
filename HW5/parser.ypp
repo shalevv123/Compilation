@@ -409,7 +409,7 @@ Exp:    LPAREN Exp RPAREN   {
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                 if(entry)
                     if(entry->type.find("->") == -1)
-                        $$ = new Exp(entry->type, emits::emit_var(entry->var));
+                        $$ = new Exp(entry->type, entry->var);
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                         exit(0);                        
@@ -425,11 +425,11 @@ Exp:    LPAREN Exp RPAREN   {
                     delete $1;
                }
         | NUM   { 
-                    $$ = new Exp("INT", emits::emit_num(static_cast<Num*>($1)));
+                    $$ = new Exp("INT", std::to_string((static_cast<Num*>($1))->value));
                 }
         | NUM B {
                     if (static_cast<Num*>($1)->value <= 255) 
-                        $$ = new Exp("BYTE", emits::emit_num(static_cast<Num*>($1)));
+                        $$ = new Exp("BYTE", std::to_string((static_cast<Num*>($1))->value));
                     else{
                         output::errorByteTooLarge(yylineno,std::to_string(static_cast<Num*>($1)->value));
                         exit(0);
@@ -527,8 +527,21 @@ void yyerror(const char*)
 void prologue(){
     CodeBuffer::instance().emitGlobal("declare i32 @printf(i8*, ...)");
     CodeBuffer::instance().emitGlobal("declare void @exit(i32)");
+    CodeBuffer::instance().emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
+    CodeBuffer::instance().emitGlobal("@.int_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
     CodeBuffer::instance().emitGlobal("@.div_error = internal constant [23 x i8] c\"Error division by zero\\00\"");
+    CodeBuffer::instance().emit("define void @printi(i32) {");
+    CodeBuffer::instance().emit("\t%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0");
+    CodeBuffer::instance().emit("\tcall i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)");
+    CodeBuffer::instance().emit("\tret void");
+    CodeBuffer::instance().emit("}");
+    CodeBuffer::instance().emit("define void @print(i8*) {");
+    CodeBuffer::instance().emit("\t%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0");
+    CodeBuffer::instance().emit("\tcall i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)");
+    CodeBuffer::instance().emit("\tret void");
+    CodeBuffer::instance().emit("}");
 }
+
 int main() {
 
     //yydebug = 1;
