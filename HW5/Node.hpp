@@ -37,7 +37,7 @@ struct Exp : public Node {
     std::string type;
     std::string var;
     Exp(std::string type, std::string var = " "):
-    type(type, var){};
+    type(type), var(var){};
 };
 
 struct ExpList : public Node {
