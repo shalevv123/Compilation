@@ -90,12 +90,18 @@ FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Form
                                                                     ret_type = "";
                                                                     func_name = "";
                                                                     argNames.clear();
-                                                                    argTypes.clear(); 
+                                                                    argTypes.clear();
+
+
+                                                                    delete $1;
                                                                 }
 ;
 
 RetType:        Type{
                         ret_type = static_cast<Type*>($1)->type;
+
+
+                        delete $1;
                     }
                 | VOID  {
                             ret_type = "VOID";
@@ -113,6 +119,9 @@ FormalsList:    FormalDecl {}
 FormalDecl:     Type ID {
                             argTypes.push_back(static_cast<Type*>($1)->type);
                             argNames.push_back(static_cast<Id*>($2)->name);
+
+
+                            delete $1;
                         }
 ;
 
@@ -146,7 +155,8 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                 if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type)){
                                     output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                     exit(0); 
-                                }     
+                                }
+                                delete $1;     
                             }
                 | Type ID ASSIGN Exp SC {
                                             if((static_cast<Type*>($1)->type != static_cast<Exp*>($4)->type) and ((static_cast<Exp*>($4)->type != "BYTE") 
@@ -158,7 +168,8 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
                                             }
-                                            
+                                            delete $1;
+                                            delete $4;
                                         }
                 | ID ASSIGN Exp SC  {
                                         TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($1)->name);
@@ -175,8 +186,14 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 output::errorMismatch(yylineno);
                                                 exit(0); 
                                         }
+
+
+                                        delete $3;
                                     }
-                | Call SC {}
+                | Call SC {
+
+                            delete $1;
+                          }
                 | RETURN SC {
                                 if(ret_type != "VOID"){
                                     output::errorMismatch(yylineno);
@@ -185,15 +202,18 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     
                             }
                 | RETURN Exp SC {
-                                if(ret_type == "VOID"){
-                                    output::errorMismatch(yylineno);
-                                    exit(0);
-                                }
-                                if(ret_type != static_cast<Exp*>($2)->type and ((static_cast<Exp*>($2)->type != "BYTE") 
-                                    or (ret_type != "INT"))){
-                                    output::errorMismatch(yylineno);
-                                    exit(0);
-                                }
+                                    if(ret_type == "VOID"){
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }
+                                    if(ret_type != static_cast<Exp*>($2)->type and ((static_cast<Exp*>($2)->type != "BYTE") 
+                                        or (ret_type != "INT"))){
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }
+
+
+                                    delete $2;
                                 }
                 | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement { scopeHandler.endScope(); }
                 | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement ELSE M_End_Scope M_New_Scope Statement {scopeHandler.endScope();}
@@ -239,7 +259,9 @@ Call:       ID LPAREN ExpList RPAREN{
                                             }
                                             ++i;
                                         }
-                                        $$ = new Call(getFuncReturn(entry));                                    
+                                        $$ = new Call(getFuncReturn(entry));
+
+                                        delete $3;                                    
                                     }
             | ID LPAREN RPAREN  {
                                     TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
@@ -263,12 +285,17 @@ Call:       ID LPAREN ExpList RPAREN{
 ExpList:    Exp {
                     ExpList* expList = new ExpList(std::vector<Exp>());
                     expList->expressions.push_back(Exp(static_cast<Exp*>($1)->type));
-                    $$ = expList; 
+                    $$ = expList;
+
+                    delete $1; 
                 }
             | Exp COMMA ExpList {
                                     ExpList* expList = new ExpList(static_cast<ExpList*>($3)->expressions); //potential bug
                                     expList->expressions.insert(expList->expressions.begin(), Exp(static_cast<Exp*>($1)->type));  
-                                    $$ = expList; 
+                                    $$ = expList;
+
+                                    delete $1;
+                                    delete $3; 
                                 }
 ;
 
@@ -289,11 +316,15 @@ M_Bool_Exp: Exp {
                         exit(0);
                     }
                     $$ = new Exp(static_cast<Exp*>($1)->type);
+
+                    delete $1;
                 }
 ;
 
 Exp:    LPAREN Exp RPAREN   { 
                                 $$ = new Exp(static_cast<Exp*>($2)->type);
+
+                                delete $2;
                             }
         | Exp IF LPAREN M_Bool_Exp RPAREN ELSE Exp %prec TERNARY
                                             {
@@ -309,6 +340,9 @@ Exp:    LPAREN Exp RPAREN   {
                                                     output::errorMismatch(yylineno);
                                                     exit(0);
                                                 }
+
+                                                delete $1;
+                                                delete $7;
                                             }
         | Exp PLUS_MINUS Exp{
                                 if (static_cast<Exp*>($1)->type == "INT" ){
@@ -333,6 +367,10 @@ Exp:    LPAREN Exp RPAREN   {
                                     output::errorMismatch(yylineno);
                                     exit(0);
                                 }
+
+
+                                delete $1;
+                                delete $3;
                             }
         | Exp MUL_DIV Exp   {
                                 if (static_cast<Exp*>($1)->type == "INT" ){
@@ -356,7 +394,10 @@ Exp:    LPAREN Exp RPAREN   {
                                 else{
                                     output::errorMismatch(yylineno); 
                                     exit(0);
-                                }                            
+                                }
+                                
+                                delete $1;
+                                delete $3;                            
                             }
         | ID{  
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
@@ -374,9 +415,18 @@ Exp:    LPAREN Exp RPAREN   {
             }
         | Call { 
                     $$ = new Exp(static_cast<Call*>($1)->type);
+
+                    delete $1;
                }
         | NUM   { 
                     $$ = new Exp("INT");
+                    // int x = 1 + 8 + 19
+                    // t1 = 1
+                    // t2 = 8
+                    // t3 = 19
+                    // t4 = t1 + t2
+                    // t5 = t3 + t4
+
                 }
         | NUM B {
                     if (static_cast<Num*>($1)->value <= 255) 
@@ -402,7 +452,10 @@ Exp:    LPAREN Exp RPAREN   {
                         else{
                             output::errorMismatch(yylineno);
                             exit(0);
-                            }
+                        }
+                        
+
+                        delete $2; 
                     }
         | Exp AND Exp   {
                             if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
@@ -410,7 +463,10 @@ Exp:    LPAREN Exp RPAREN   {
                             else{
                                 output::errorMismatch(yylineno);
                                 exit(0);
-                            }     
+                            }
+
+                            delete $1;
+                            delete $3;     
                         }
         | Exp OR Exp{ 
                         if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
@@ -420,6 +476,8 @@ Exp:    LPAREN Exp RPAREN   {
                             exit(0);
                         }
                         
+                        delete $1;
+                        delete $3;
                     }      
         | Exp RELOP Exp { 
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
@@ -429,6 +487,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 output::errorMismatch(yylineno);
                                 exit(0);
                             }
+
+                            delete $1;
+                            delete $3;
                         }
         | Exp EQUAL Exp { 
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
@@ -438,6 +499,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 output::errorMismatch(yylineno);
                                 exit(0);
                             }
+
+                            delete $1;
+                            delete $3;
                         }
         | LPAREN Type RPAREN Exp{  
                                     if (static_cast<Type*>($2)->type == "INT" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE"))
@@ -447,7 +511,10 @@ Exp:    LPAREN Exp RPAREN   {
                                     else{
                                         output::errorMismatch(yylineno);
                                         exit(0);
-                                    }  
+                                    }
+
+                                    delete $2;
+                                    delete $4;  
                                 }
 ;
 

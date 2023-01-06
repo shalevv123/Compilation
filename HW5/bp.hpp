@@ -16,6 +16,7 @@ class CodeBuffer{
     void operator=(CodeBuffer const&);
 	std::vector<std::string> buffer;
 	std::vector<std::string> globalDefs;
+	unsigned long long nextVar = 1;
 public:
 	static CodeBuffer &instance();
 
@@ -23,6 +24,9 @@ public:
 
 	//generates a jump location label for the next command, writes it to the buffer and returns it
 	std::string genLabel();
+
+	//generates a new register
+	std::string freshVar();
 
 	//writes command to the buffer, returns its location in the buffer
 	int emit(const std::string &command);
@@ -45,7 +49,7 @@ public:
 	example #2:
 	int loc2 = emit("br i1 %cond, label @, label @"); - conditional branch missing two labels.
 	bpatch(makelist({loc2,SECOND}),"my_false_label"); - location loc2 in the buffer will now contain the command "br i1 %cond, label @, label %my_false_label"
-	bpatch(makelist({loc2,FIRST}),"my_true_label"); - location loc2 in the buffer will now contain the command "br i1 %cond, label @my_true_label, label %my_false_label"
+	bpatch(makelist({loc2,FIRST}),"my_true_label"); - location loc2 in the buffer will now contain the command "br i1 %cond, label %my_true_label, label %my_false_label"
 	*/
 	void bpatch(const vector<pair<int,BranchLabelIndex>>& address_list, const std::string &label);
 	

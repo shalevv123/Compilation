@@ -44,12 +44,12 @@ TableEntry* ScopeHandler::findSymbol(const std::string& name)
     return nullptr;
 }
 
-bool ScopeHandler::addSymbol(const std::string& name, std::string type)
+bool ScopeHandler::addSymbol(const std::string& name, std::string type, std::string var="")
 {
     if (findSymbol(name))
         return false;
 
-    tableStack.back().addEntry(name, std::move(type), offsetStack.back());
+    tableStack.back().addEntry(name, std::move(type), offsetStack.back(), var);
     offsetStack.back() += 1;
     return true;
 }

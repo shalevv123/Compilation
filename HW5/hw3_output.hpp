@@ -11,7 +11,7 @@ std::string getFuncReturn(TableEntry* entry);
 
 namespace output{
     void endScope();
-    void printID(const std::string& id, int offset, const std::string& typerrorMismatch);
+    void printID(const std::string& id, int offset, const std::string& type, const std::string& var);
 
     /* Do not save the string returned from this function in a data structure
         as it is not dynamically allocated and will be destroyed(!) at the end of the calling scope.

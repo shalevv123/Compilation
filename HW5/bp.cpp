@@ -23,6 +23,14 @@ string CodeBuffer::genLabel(){
 	return ret;
 }
 
+string CodeBuffer::freshVar(){
+	std::stringstream var;
+	var << "t";
+	var << nextVar++;
+	std::string ret(var.str());
+	return ret;
+}
+
 int CodeBuffer::emit(const string &s){
     buffer.push_back(s);
 	return buffer.size() - 1;

@@ -23,8 +23,8 @@ void output::endScope(){
     cout << "---end scope---" << endl;
 }
 
-void output::printID(const string& id, int offset, const string& type) {
-    cout << id << " " << type <<  " " << offset <<  endl;
+void output::printID(const string& id, int offset, const string& type, const string& var) {
+    cout << id << " " << type <<  " " << offset << " " << var <<  endl;
 }
 
 string typeListToString(const std::vector<string>& argTypes) {
