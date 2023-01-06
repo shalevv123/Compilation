@@ -1,0 +1,464 @@
+%{
+    #include <iostream>
+    #include "hw3_output.hpp"
+    #include "ScopeHandler.hpp"
+    #include "Node.hpp"
+    #include <string>
+    #include <memory>
+    //#define YYDEBUG 1
+    using namespace std;
+    using namespace output;
+    int yylex();
+    void yyerror(const char*);
+	extern int yylineno;
+    std::string ret_type;
+    std::string func_name;
+    std::vector<std::string> argNames;
+    std::vector<std::string> argTypes;
+    int while_count = 0;
+    ScopeHandler scopeHandler;
+%}
+
+%nonassoc VOID
+%nonassoc INT
+%nonassoc BYTE
+%nonassoc B
+%nonassoc BOOL
+%nonassoc TRUE
+%nonassoc FALSE
+%nonassoc RETURN
+
+%nonassoc WHILE
+%nonassoc BREAK
+%nonassoc CONTINUE
+%nonassoc SC
+%nonassoc LPAREN
+%nonassoc LBRACE
+%nonassoc RBRACE
+%nonassoc NUM
+%nonassoc STRING
+%nonassoc ID
+%nonassoc COMMA
+%nonassoc IF
+
+
+%left ASSIGN
+%right TERNARY
+%left OR
+%left AND
+%left EQUAL
+%left RELOP
+%left PLUS_MINUS
+%left MUL_DIV
+%right NOT 
+%nonassoc RPAREN
+%nonassoc ELSE
+
+
+%%
+Program:        Funcs   {
+                            if(yychar == YYEOF){
+                                        TableEntry* mainSym = scopeHandler.findSymbol("main");
+                                        if(!mainSym){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if ((mainSym->type).find("->") == -1){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if(getFuncReturn(mainSym) != "VOID"){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        if(getFuncParams(mainSym).size() != 0){
+                                            output::errorMainMissing();
+                                            exit(0);
+                                        }
+                                        scopeHandler.endScope();
+                            }
+                        }
+;
+
+Funcs:          /*epsilon*/{}
+                | FuncDecl Funcs {}
+;
+
+FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Formals RPAREN M_Add_Function /*a new scope is created*/
+                LBRACE Statements RBRACE /* release marker*/    {
+                                                                    scopeHandler.endScope();
+                                                                    ret_type = "";
+                                                                    func_name = "";
+                                                                    argNames.clear();
+                                                                    argTypes.clear(); 
+                                                                }
+;
+
+RetType:        Type{
+                        ret_type = static_cast<Type*>($1)->type;
+                    }
+                | VOID  {
+                            ret_type = "VOID";
+                        }
+;
+
+Formals:        /*epsilon*/{}
+                | FormalsList {}
+;
+
+FormalsList:    FormalDecl {}
+                | FormalDecl COMMA FormalsList {}
+;
+
+FormalDecl:     Type ID {
+                            argTypes.push_back(static_cast<Type*>($1)->type);
+                            argNames.push_back(static_cast<Id*>($2)->name);
+                        }
+;
+
+M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
+;
+
+M_End_Scope:   /*epsilon*/ {scopeHandler.endScope();}
+;
+
+M_While:        /*epsilon*/ {while_count++;}
+;
+
+M_Add_Function: /*epsilon*/ { 
+                                std::shared_ptr<std::string> bad_name = scopeHandler.addFunction(func_name, ret_type, argNames, argTypes);
+                                if(bad_name){
+                                    output::errorDef(yylineno, *bad_name);
+                                    exit(0);   
+                                }
+                            }
+;
+
+Statements:     Statement {}
+                |Statements Statement {}
+                
+;
+
+Statement:      LBRACE M_New_Scope Statements RBRACE{
+                                                        scopeHandler.endScope();
+                                                    }
+                | Type ID SC{
+                                if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type)){
+                                    output::errorDef(yylineno, static_cast<Id*>($2)->name);
+                                    exit(0); 
+                                }     
+                            }
+                | Type ID ASSIGN Exp SC {
+                                            if((static_cast<Type*>($1)->type != static_cast<Exp*>($4)->type) and ((static_cast<Exp*>($4)->type != "BYTE") 
+                                                or (static_cast<Type*>($1)->type != "INT"))){
+                                                output::errorMismatch(yylineno);
+                                                exit(0);
+                                            }
+                                            if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type)){
+                                                output::errorDef(yylineno, static_cast<Id*>($2)->name);
+                                                exit(0); 
+                                            }
+                                            
+                                        }
+                | ID ASSIGN Exp SC  {
+                                        TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($1)->name);
+                                        if (!entry){
+                                            output::errorUndef(yylineno, static_cast<Id*>($1)->name);
+                                            exit(0); 
+                                        }
+                                        if(entry->type.find("->") != -1){
+                                            output::errorUndef(yylineno, static_cast<Id*>($1)->name);
+                                            exit(0);
+                                        }
+                                        if((entry->type != static_cast<Exp*>($3)->type) and
+                                            ((entry->type != "INT") or (static_cast<Exp*>($3)->type != "BYTE"))){
+                                                output::errorMismatch(yylineno);
+                                                exit(0); 
+                                        }
+                                    }
+                | Call SC {}
+                | RETURN SC {
+                                if(ret_type != "VOID"){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                                    
+                            }
+                | RETURN Exp SC {
+                                if(ret_type == "VOID"){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                                if(ret_type != static_cast<Exp*>($2)->type and ((static_cast<Exp*>($2)->type != "BYTE") 
+                                    or (ret_type != "INT"))){
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                                }
+                | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement { scopeHandler.endScope(); }
+                | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement ELSE M_End_Scope M_New_Scope Statement {scopeHandler.endScope();}
+                | WHILE M_While LPAREN M_Bool_Exp RPAREN M_New_Scope Statement{
+                                                                                        while_count--;
+                                                                                        scopeHandler.endScope();
+                                                                                    }
+                | BREAK SC {
+                             if(!while_count){
+                                output::errorUnexpectedBreak(yylineno);
+                                exit(0);
+                             }
+                            }
+                | CONTINUE SC   {
+                                 if (!while_count){
+                                    output::errorUnexpectedContinue(yylineno);
+                                    exit(0);
+                                 }
+                                }
+;
+
+Call:       ID LPAREN ExpList RPAREN{
+                                        TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
+                                        if (!entry){
+                                            output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
+                                            exit(0);
+                                        }
+                                        if(entry->type.find("->") == -1){
+                                            output::errorUndefFunc(yylineno, static_cast<Id*>($1)->name);
+                                            exit(0);
+                                        }
+                                        std::vector<std::string> params = getFuncParams(entry);
+                                        if(static_cast<ExpList*>($3)->expressions.size() != params.size()){
+                                            output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                            exit(0);
+                                        } 
+                                        int i = 0;
+                                        for(auto& exp : static_cast<ExpList*>($3)->expressions){
+                                            if((exp.type != params[i]) and ((exp.type != "BYTE") 
+                                                or (params[i] != "INT"))){
+                                                output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                                exit(0);
+                                            }
+                                            ++i;
+                                        }
+                                        $$ = new Call(getFuncReturn(entry));                                    
+                                    }
+            | ID LPAREN RPAREN  {
+                                    TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
+                                    if (!entry){
+                                            output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
+                                            exit(0);
+                                    }
+                                    if(entry->type.find("->") == -1){
+                                        output::errorUndefFunc(yylineno,  static_cast<Id*>($1)->name);
+                                        exit(0);
+                                    }
+                                    vector<string> params = getFuncParams(entry);
+                                    if (params.size() != 0){
+                                        output::errorPrototypeMismatch(yylineno, entry->name, params);
+                                        exit(0);
+                                    }
+                                    $$ = new Call(getFuncReturn(entry));   
+                                }
+;   
+
+ExpList:    Exp {
+                    ExpList* expList = new ExpList(std::vector<Exp>());
+                    expList->expressions.push_back(Exp(static_cast<Exp*>($1)->type));
+                    $$ = expList; 
+                }
+            | Exp COMMA ExpList {
+                                    ExpList* expList = new ExpList(static_cast<ExpList*>($3)->expressions); //potential bug
+                                    expList->expressions.insert(expList->expressions.begin(), Exp(static_cast<Exp*>($1)->type));  
+                                    $$ = expList; 
+                                }
+;
+
+Type:     INT   {
+                    $$ = new Type("INT");
+                }
+        | BYTE  {
+                    $$ = new Type("BYTE");
+                }
+        | BOOL  {
+                    $$ = new Type("BOOL");
+                }
+;
+
+M_Bool_Exp: Exp {
+                    if(static_cast<Exp*>($1)->type != "BOOL"){
+                        output::errorMismatch(yylineno);
+                        exit(0);
+                    }
+                    $$ = new Exp(static_cast<Exp*>($1)->type);
+                }
+;
+
+Exp:    LPAREN Exp RPAREN   { 
+                                $$ = new Exp(static_cast<Exp*>($2)->type);
+                            }
+        | Exp IF LPAREN M_Bool_Exp RPAREN ELSE Exp %prec TERNARY
+                                            {
+                                                if(static_cast<Exp*>($4)->type == "BOOL" and 
+                                                (static_cast<Exp*>($1)->type == static_cast<Exp*>($7)->type or (static_cast<Exp*>($1)->type == "BYTE" and static_cast<Exp*>($7)->type == "INT"))){
+                                                    $$ = new Exp(static_cast<Exp*>($7)->type);
+                                                }
+                                                else if(static_cast<Exp*>($4)->type == "BOOL" and 
+                                                (static_cast<Exp*>($1)->type == "INT" and static_cast<Exp*>($7)->type == "BYTE")){
+                                                    $$ = new Exp(static_cast<Exp*>($1)->type);
+                                                }
+                                                else{
+                                                    output::errorMismatch(yylineno);
+                                                    exit(0);
+                                                }
+                                            }
+        | Exp PLUS_MINUS Exp{
+                                if (static_cast<Exp*>($1)->type == "INT" ){
+                                    if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
+                                        $$ = new Exp("INT");
+                                    else{
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }
+                                }
+                                else if (static_cast<Exp*>($1)->type == "BYTE"){
+                                    if(static_cast<Exp*>($3)->type == "INT")
+                                        $$ = new Exp("INT");
+                                    else if(static_cast<Exp*>($3)->type == "BYTE")
+                                        $$ = new Exp("BYTE");
+                                    else{
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }
+                                }
+                                else{
+                                    output::errorMismatch(yylineno);
+                                    exit(0);
+                                }
+                            }
+        | Exp MUL_DIV Exp   {
+                                if (static_cast<Exp*>($1)->type == "INT" ){
+                                    if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
+                                        $$ = new Exp("INT");
+                                    else{
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    };
+                                }
+                                else if (static_cast<Exp*>($1)->type == "BYTE"){
+                                    if(static_cast<Exp*>($3)->type == "INT")
+                                        $$ = new Exp("INT");
+                                    else if(static_cast<Exp*>($3)->type == "BYTE")
+                                        $$ = new Exp("BYTE");
+                                    else{
+                                        output::errorMismatch(yylineno); 
+                                        exit(0);
+                                    }
+                                }
+                                else{
+                                    output::errorMismatch(yylineno); 
+                                    exit(0);
+                                }                            
+                            }
+        | ID{  
+                TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
+                if(entry)
+                    if(entry->type.find("->") == -1)
+                        $$ = new Exp(entry->type);
+                    else{
+                        output::errorUndef(yylineno, static_cast<Id*>($1)->name);
+                        exit(0);                        
+                    }
+                else{
+                    output::errorUndef(yylineno, static_cast<Id*>($1)->name);
+                    exit(0);
+                }
+            }
+        | Call { 
+                    $$ = new Exp(static_cast<Call*>($1)->type);
+               }
+        | NUM   { 
+                    $$ = new Exp("INT");
+                }
+        | NUM B {
+                    if (static_cast<Num*>($1)->value <= 255) 
+                        $$ = new Exp("BYTE");
+                    else{
+                        output::errorByteTooLarge(yylineno,std::to_string(static_cast<Num*>($1)->value));
+                        exit(0);
+                    }
+                }
+        | STRING{ 
+                    $$ = new Exp("STRING"); 
+                }
+        | TRUE  { 
+                    $$ = new Exp("BOOL"); 
+                }
+        | FALSE { 
+                    $$ = new Exp("BOOL"); 
+                }
+        | NOT Exp   { 
+                        if(static_cast<Exp*>($2)->type == "BOOL")
+                            $$ = new Exp("BOOL");
+                            
+                        else{
+                            output::errorMismatch(yylineno);
+                            exit(0);
+                            }
+                    }
+        | Exp AND Exp   {
+                            if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
+                                $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno);
+                                exit(0);
+                            }     
+                        }
+        | Exp OR Exp{ 
+                        if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
+                            $$ = new Exp("BOOL");
+                        else{
+                            output::errorMismatch(yylineno);
+                            exit(0);
+                        }
+                        
+                    }      
+        | Exp RELOP Exp { 
+                            if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
+                                and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
+                                        $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno);
+                                exit(0);
+                            }
+                        }
+        | Exp EQUAL Exp { 
+                            if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
+                                and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
+                                    $$ = new Exp("BOOL");
+                            else{
+                                output::errorMismatch(yylineno);
+                                exit(0);
+                            }
+                        }
+        | LPAREN Type RPAREN Exp{  
+                                    if (static_cast<Type*>($2)->type == "INT" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE"))
+                                        $$ = new Exp("INT");
+                                    else if (static_cast<Type*>($2)->type == "BYTE" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE"))
+                                        $$ = new Exp("BYTE");
+                                    else{
+                                        output::errorMismatch(yylineno);
+                                        exit(0);
+                                    }  
+                                }
+;
+
+%%
+
+void yyerror(const char*) 
+{ 
+    errorSyn(yylineno);
+    exit(0); 
+}
+int main() {
+    //yydebug = 1;
+    return yyparse();
+}
