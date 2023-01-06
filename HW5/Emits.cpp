@@ -2,24 +2,25 @@
 #include "Emits.hpp"
 #include "bp.hpp"
 #include <string>
+#include <utility>
 
 using namespace std;
 
 std::string emits::emit_var(std::string var1, std::string op, std::string var2, bool isByte){
     string var = CodeBuffer::instance().freshVar();
-    string str = "";
+    string str;
     if (op == "+"){
-        str = var + "= add i32 " + var1 + ", " + var2;
+        str = var + " = add i32 " + var1 + ", " + var2;
     }
     else if (op == "-"){
-        str = var + "= sub i32 " + var1 + ", " + var2;
+        str = var + " = sub i32 " + var1 + ", " + var2;
     }
     else if (op == "*"){
-        str = var + "= mul i32 " + var1 + ", " + var2;  
+        str = var + " = mul i32 " + var1 + ", " + var2;  
     }
     else if (op == "/"){
         string flag_var = CodeBuffer::instance().freshVar();
-        str = flag_var + "= icmp eq i32 " + var2 + ", 0";
+        str = flag_var + " = icmp eq i32 " + var2 + ", 0";
         CodeBuffer::instance().emit(str); 
 
         str = "br i1 " + flag_var + ", label @, label @";
@@ -35,19 +36,19 @@ std::string emits::emit_var(std::string var1, std::string op, std::string var2, 
         str = "call void @exit(i32 0)";
         CodeBuffer::instance().emit(str);
 
-        string false_label = CodeBuffer::instance().genLabel();
+        string falseLabel = CodeBuffer::instance().genLabel();
         CodeBuffer::instance().bpatch(CodeBuffer::makelist({fill,FIRST}), trueLabel);
         CodeBuffer::instance().bpatch(CodeBuffer::makelist({fill,SECOND}), falseLabel);
 
         if (isByte)
-            str = var + " udiv i32 " + var1 + ", " + var2;
+            str = var + " = udiv i32 " + var1 + ", " + var2;
         else
-            str = var + " sdiv i32 " + var1 + ", " + var2;
+            str = var + " = sdiv i32 " + var1 + ", " + var2;
         
 
     }
     else if (op == ""){
-        str = var + "= add i32 0, " + var1; 
+        str = var + " = add i32 0, " + var1; 
     }
 
     CodeBuffer::instance().emit(str); 
@@ -62,10 +63,14 @@ std::string emits::emit_var(std::string var1, std::string op, std::string var2, 
 
 std::string emits::emit_num(Num* num){
     string var = CodeBuffer::instance().freshVar();
-    string str = var + "add i32 0, " + num->value;
+    string str = var + " = add i32 0, " + std::to_string(num->value);
+    CodeBuffer::instance().emit(str);
     return var;
 }
 
 std::string emits::emit_exp(Exp* exp1, std::string op, Exp* exp2, bool isByte){
-    return emit_vars(exp1->var, op, exp2->var, isByte)
+    if (exp2)
+        return emit_var(exp1->var, std::move(op), exp2->var, isByte);
+    else
+        return emit_var(exp1->var, "", "", isByte);
 }

@@ -4,7 +4,7 @@
 #include "hw3_output.hpp"
 using namespace std;
 
-TableEntry::TableEntry(std::string name, std::string type, int offset,  std::string var):
+TableEntry::TableEntry(std::string name, std::string type, int offset, std::string var):
 name(std::move(name)), type(std::move(type)), offset(offset), var(std::move(var))
 {}
 

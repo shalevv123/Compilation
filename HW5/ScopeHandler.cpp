@@ -27,7 +27,6 @@ void ScopeHandler::newScope()
 
 void ScopeHandler::endScope()
 {
-    output::endScope();
     offsetStack.pop_back();
     tableStack.pop_back();
 }

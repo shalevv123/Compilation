@@ -16,7 +16,7 @@ class CodeBuffer{
     void operator=(CodeBuffer const&);
 	std::vector<std::string> buffer;
 	std::vector<std::string> globalDefs;
-	unsigned long long nextVar = 1;
+	unsigned long long nextVar = 0;
 public:
 	static CodeBuffer &instance();
 

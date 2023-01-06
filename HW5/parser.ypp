@@ -78,9 +78,9 @@ Program:        Funcs   {
                                             exit(0);
                                         }
                                         scopeHandler.endScope();
-
-                                        CodeBuffer::instance().printCodeBuffer();
                                         CodeBuffer::instance().printGlobalBuffer();
+                                        CodeBuffer::instance().printCodeBuffer();
+
 
                             }
                         }
@@ -170,7 +170,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 output::errorMismatch(yylineno);
                                                 exit(0);
                                             }
-                                            if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type)){
+                                            if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type, emits::emit_exp(static_cast<Exp*>($4)))){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
                                             }
@@ -193,7 +193,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0); 
                                         }
 
-
+                                        entry->var = emits::emit_exp(static_cast<Exp*>($3));
                                         delete $3;
                                     }
                 | Call SC {
@@ -409,7 +409,7 @@ Exp:    LPAREN Exp RPAREN   {
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                 if(entry)
                     if(entry->type.find("->") == -1)
-                        $$ = new Exp(entry->type, emits::emit_vars(entry->var));
+                        $$ = new Exp(entry->type, emits::emit_var(entry->var));
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                         exit(0);                        
@@ -429,7 +429,7 @@ Exp:    LPAREN Exp RPAREN   {
                 }
         | NUM B {
                     if (static_cast<Num*>($1)->value <= 255) 
-                        $$ = new Exp("BYTE", emits::emit_num(static_cast<Num*>($1), true));
+                        $$ = new Exp("BYTE", emits::emit_num(static_cast<Num*>($1)));
                     else{
                         output::errorByteTooLarge(yylineno,std::to_string(static_cast<Num*>($1)->value));
                         exit(0);
@@ -525,9 +525,9 @@ void yyerror(const char*)
     exit(0); 
 }
 void prologue(){
-    CodeGlobal::instance().emit("declare i32 @printf(i8*, ...)");
-    CodeGlobal::instance().emit("declare void @exit(i32)");
-    CodeGlobal::instance().emit("@.div_error = internal constant [23 x i8] c\"Error division by zero\00\"");
+    CodeBuffer::instance().emitGlobal("declare i32 @printf(i8*, ...)");
+    CodeBuffer::instance().emitGlobal("declare void @exit(i32)");
+    CodeBuffer::instance().emitGlobal("@.div_error = internal constant [23 x i8] c\"Error division by zero\\00\"");
 }
 int main() {
 
