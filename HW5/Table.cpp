@@ -4,8 +4,8 @@
 #include "hw3_output.hpp"
 using namespace std;
 
-TableEntry::TableEntry(std::string name, std::string type, int offset,  std::string var = ""):
-name(std::move(name)), type(std::move(type)), offset(offset), var(var)
+TableEntry::TableEntry(std::string name, std::string type, int offset,  std::string var):
+name(std::move(name)), type(std::move(type)), offset(offset), var(std::move(var))
 {}
 
 
@@ -17,7 +17,7 @@ TableEntry* Table::findEntry(const std::string& name_to_find){
     return nullptr;
 }
 
-void Table::addEntry(std::string name, std::string type, int offset,  std::string var = ""){
+void Table::addEntry(std::string name, std::string type, int offset,  std::string var){
     table.emplace_back(std::move(name), std::move(type), offset, var);
 }
 

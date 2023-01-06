@@ -25,7 +25,7 @@ string CodeBuffer::genLabel(){
 
 string CodeBuffer::freshVar(){
 	std::stringstream var;
-	var << "t";
+	var << "%t";
 	var << nextVar++;
 	std::string ret(var.str());
 	return ret;

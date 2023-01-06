@@ -18,3 +18,14 @@ HW3/tests1
 HW3/selfcheck-hw3
 HW3/tests2
 HW3/211578794-318268265.zip
+HW5/CMakeLists.txt
+HW5/.vscode
+HW5/.idea
+HW5/cmake-build-debug
+HW5/parser.output
+HW5/parser.tab.cpp
+HW5/parser.tab.hpp
+HW5/lex.yy.c
+HW5/Makefile
+HW5/llvm_examples
+

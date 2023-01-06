@@ -3,6 +3,8 @@
     #include "hw3_output.hpp"
     #include "ScopeHandler.hpp"
     #include "Node.hpp"
+    #include "Emits.hpp"
+    #include "bp.hpp"
     #include <string>
     #include <memory>
     //#define YYDEBUG 1
@@ -76,6 +78,10 @@ Program:        Funcs   {
                                             exit(0);
                                         }
                                         scopeHandler.endScope();
+
+                                        CodeBuffer::instance().printCodeBuffer();
+                                        CodeBuffer::instance().printGlobalBuffer();
+
                             }
                         }
 ;
@@ -322,7 +328,7 @@ M_Bool_Exp: Exp {
 ;
 
 Exp:    LPAREN Exp RPAREN   { 
-                                $$ = new Exp(static_cast<Exp*>($2)->type);
+                                $$ = new Exp(static_cast<Exp*>($2)->type, emits::emit_exp(static_cast<Exp*>($2), "", nullptr, (static_cast<Exp*>($2)->type == "BYTE")));
 
                                 delete $2;
                             }
@@ -347,7 +353,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp PLUS_MINUS Exp{
                                 if (static_cast<Exp*>($1)->type == "INT" ){
                                     if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
-                                        $$ = new Exp("INT");
+                                        $$ = new Exp("INT", emits::emit_exp(static_cast<Exp*>($1), (static_cast<PlusMinus*>($2))->op, static_cast<Exp*>($3)));
                                     else{
                                         output::errorMismatch(yylineno);
                                         exit(0);
@@ -355,9 +361,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 }
                                 else if (static_cast<Exp*>($1)->type == "BYTE"){
                                     if(static_cast<Exp*>($3)->type == "INT")
-                                        $$ = new Exp("INT");
+                                        $$ = new Exp("INT", emits::emit_exp(static_cast<Exp*>($1), (static_cast<PlusMinus*>($2))->op, static_cast<Exp*>($3)));
                                     else if(static_cast<Exp*>($3)->type == "BYTE")
-                                        $$ = new Exp("BYTE");
+                                       $$ = new Exp("BYTE", emits::emit_exp(static_cast<Exp*>($1), (static_cast<PlusMinus*>($2))->op, static_cast<Exp*>($3), true));
                                     else{
                                         output::errorMismatch(yylineno);
                                         exit(0);
@@ -375,7 +381,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp MUL_DIV Exp   {
                                 if (static_cast<Exp*>($1)->type == "INT" ){
                                     if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
-                                        $$ = new Exp("INT");
+                                        $$ = new Exp("INT", emits::emit_exp(static_cast<Exp*>($1), (static_cast<MulDiv*>($2))->op, static_cast<Exp*>($3)));
                                     else{
                                         output::errorMismatch(yylineno);
                                         exit(0);
@@ -383,9 +389,9 @@ Exp:    LPAREN Exp RPAREN   {
                                 }
                                 else if (static_cast<Exp*>($1)->type == "BYTE"){
                                     if(static_cast<Exp*>($3)->type == "INT")
-                                        $$ = new Exp("INT");
+                                        $$ = new Exp("INT", emits::emit_exp(static_cast<Exp*>($1), (static_cast<MulDiv*>($2))->op, static_cast<Exp*>($3)));
                                     else if(static_cast<Exp*>($3)->type == "BYTE")
-                                        $$ = new Exp("BYTE");
+                                        $$ = new Exp("BYTE", emits::emit_exp(static_cast<Exp*>($1), (static_cast<MulDiv*>($2))->op, static_cast<Exp*>($3), true));
                                     else{
                                         output::errorMismatch(yylineno); 
                                         exit(0);
@@ -403,7 +409,7 @@ Exp:    LPAREN Exp RPAREN   {
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                 if(entry)
                     if(entry->type.find("->") == -1)
-                        $$ = new Exp(entry->type);
+                        $$ = new Exp(entry->type, emits::emit_vars(entry->var));
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                         exit(0);                        
@@ -419,11 +425,11 @@ Exp:    LPAREN Exp RPAREN   {
                     delete $1;
                }
         | NUM   { 
-                    $$ = new Exp("INT");
+                    $$ = new Exp("INT", emits::emit_num(static_cast<Num*>($1)));
                 }
         | NUM B {
                     if (static_cast<Num*>($1)->value <= 255) 
-                        $$ = new Exp("BYTE");
+                        $$ = new Exp("BYTE", emits::emit_num(static_cast<Num*>($1), true));
                     else{
                         output::errorByteTooLarge(yylineno,std::to_string(static_cast<Num*>($1)->value));
                         exit(0);
@@ -498,9 +504,9 @@ Exp:    LPAREN Exp RPAREN   {
                         }
         | LPAREN Type RPAREN Exp{  
                                     if (static_cast<Type*>($2)->type == "INT" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE"))
-                                        $$ = new Exp("INT");
+                                        $$ = new Exp("INT",emits::emit_exp(static_cast<Exp*>($4)));
                                     else if (static_cast<Type*>($2)->type == "BYTE" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE"))
-                                        $$ = new Exp("BYTE");
+                                        $$ = new Exp("BYTE", emits::emit_exp(static_cast<Exp*>($4), "", nullptr, true));
                                     else{
                                         output::errorMismatch(yylineno);
                                         exit(0);
@@ -518,7 +524,14 @@ void yyerror(const char*)
     errorSyn(yylineno);
     exit(0); 
 }
+void prologue(){
+    CodeGlobal::instance().emit("declare i32 @printf(i8*, ...)");
+    CodeGlobal::instance().emit("declare void @exit(i32)");
+    CodeGlobal::instance().emit("@.div_error = internal constant [23 x i8] c\"Error division by zero\00\"");
+}
 int main() {
+
     //yydebug = 1;
+    prologue();
     return yyparse();
 }
