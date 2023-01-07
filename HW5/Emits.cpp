@@ -3,12 +3,13 @@
 #include "bp.hpp"
 #include <string>
 #include <utility>
-
+#include "assert.h"
 using namespace std;
 
-std::string emits::emit_var(std::string var1, std::string op, std::string var2, bool isByte){
+std::string emits::emit_var(std::string var1, std::string op, std::string var2, bool isByte, bool isBool){
     string var = CodeBuffer::instance().freshVar();
     string str;
+    if (!isBool){
     if (op == "+"){
         str = var + " = add i32 " + var1 + ", " + var2;
     }
@@ -58,6 +59,12 @@ std::string emits::emit_var(std::string var1, std::string op, std::string var2, 
         str = var +" = and i32 " + mid_var + ", 255";
         CodeBuffer::instance().emit(str);
     }
+    }
+    else{
+        assert(op == ""); //TODO: remove this
+        str = var +" = add i1 0, " + var1;
+        CodeBuffer::instance().emit(str);
+    }
     return var;
 }
 
@@ -68,9 +75,44 @@ std::string emits::emit_num(Num* num){
     return var;
 }
 
-std::string emits::emit_exp(Exp* exp1, std::string op, Exp* exp2, bool isByte){
+std::string emits::emit_exp(Exp* exp1, std::string op, Exp* exp2, bool isByte, bool isBool){
     if (exp2)
-        return emit_var(exp1->var, std::move(op), exp2->var, isByte);
-    else
-        return emit_var(exp1->var, "", "", isByte);
+        return emit_var(exp1->var, std::move(op), exp2->var, isByte, isBool);
+        
+    return emit_var(exp1->var, "", "", isByte, isBool);
+}
+
+std::string emits::emit_global_string(String* str){
+    string var = CodeBuffer::instance().freshVar();
+    string value = str->value.substr(1);
+    value.pop_back();
+    string global_str = var + " = internal constant [" + to_string(value.size()+1) +
+                 + " x i8] c\"" + value + "\\00\"";
+    CodeBuffer::instance().emitGlobal(global_str);
+    return var;
+}
+
+std::string emits::emit_relop(Exp* exp1, std::string op, Exp* exp2){
+    string var = CodeBuffer::instance().freshVar();
+    string str;
+    if (op == "=="){
+        str = var + " = icmp eq i32 " + exp1->var + ", " + exp2->var;
+    }
+    else if(op == "!="){
+        str = var + " = icmp ne i32 " + exp1->var + ", " + exp2->var;
+    }
+    else if(op == "<"){
+        str = var + " = icmp slt i32 " + exp1->var + ", " + exp2->var;
+    }
+    else if(op == "<="){
+        str = var + " = icmp sle i32 " + exp1->var + ", " + exp2->var;
+    }
+    else if(op == ">"){
+        str = var + " = icmp sgt i32 " + exp1->var + ", " + exp2->var;
+    }
+    else if(op == ">="){
+        str = var + " = icmp sge i32 " + exp1->var + ", " + exp2->var;
+    }
+    CodeBuffer::instance().emit(str);
+    return var;
 }

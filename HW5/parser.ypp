@@ -170,7 +170,8 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 output::errorMismatch(yylineno);
                                                 exit(0);
                                             }
-                                            if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type, emits::emit_exp(static_cast<Exp*>($4)))){
+                                            if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type,
+                                                 emits::emit_exp(static_cast<Exp*>($4), "", nullptr, false, static_cast<Exp*>($4)->type == "BOOL"))){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
                                             }
@@ -193,7 +194,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0); 
                                         }
 
-                                        entry->var = emits::emit_exp(static_cast<Exp*>($3));
+                                        entry->var = emits::emit_exp(static_cast<Exp*>($3), "", nullptr, false, static_cast<Exp*>($3)->type == "BOOL");
                                         delete $3;
                                     }
                 | Call SC {
@@ -436,13 +437,13 @@ Exp:    LPAREN Exp RPAREN   {
                     }
                 }
         | STRING{ 
-                    $$ = new Exp("STRING"); 
+                    $$ = new Exp("STRING", emits::emit_global_string(static_cast<String*>($1))); 
                 }
         | TRUE  { 
-                    $$ = new Exp("BOOL"); 
+                    $$ = new Exp("BOOL", "1"); 
                 }
         | FALSE { 
-                    $$ = new Exp("BOOL"); 
+                    $$ = new Exp("BOOL", "0"); 
                 }
         | NOT Exp   { 
                         if(static_cast<Exp*>($2)->type == "BOOL")
@@ -481,7 +482,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp RELOP Exp { 
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
-                                        $$ = new Exp("BOOL");
+                                        $$ = new Exp("BOOL", emits::emit_relop(static_cast<Exp*>($1), (static_cast<Relop*>($2))->op , static_cast<Exp*>($3)));
                             else{
                                 output::errorMismatch(yylineno);
                                 exit(0);
@@ -493,7 +494,7 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp EQUAL Exp { 
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
-                                    $$ = new Exp("BOOL");
+                                    $$ = new Exp("BOOL", emits::emit_relop(static_cast<Exp*>($1), (static_cast<Equal*>($2))->op , static_cast<Exp*>($3)));
                             else{
                                 output::errorMismatch(yylineno);
                                 exit(0);
