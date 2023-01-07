@@ -12,7 +12,7 @@ name(std::move(name)), type(std::move(type)), offset(offset), var(std::move(var)
 
 std::string TableEntry::emit_store(const std::string& base_pointer) const{
     string new_var = CodeBuffer::instance().freshVar();
-    string str = new_var + " = getelementptr i32, i32* " + base_pointer + ", i32 0, i32 " + to_string(offset);
+    string str = new_var + " = getelementptr i32, i32* " + base_pointer + ", i32 0, i32 " + to_string(offset); //TODO: change types
     CodeBuffer::instance().emit(str);
     if (type == "BOOL"){
         string final_var = CodeBuffer::instance().freshVar();
@@ -29,7 +29,7 @@ std::string TableEntry::emit_store(const std::string& base_pointer) const{
 
 std::string TableEntry::emit_load(const std::string& base_pointer) const{
     string new_var = CodeBuffer::instance().freshVar();
-    string str = new_var + " = getelementptr i32, i32* " + base_pointer + ", i32 0, i32 " + to_string(offset);
+    string str = new_var + " = getelementptr i32, i32* " + base_pointer + ", i32 0, i32 " + to_string(offset); //TODO: change types
     CodeBuffer::instance().emit(str);
 
     string final_var = CodeBuffer::instance().freshVar();
