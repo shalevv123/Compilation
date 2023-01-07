@@ -118,18 +118,19 @@ std::string BoolExp::emit(){
 }
 
 std::string BoolExp::emitOp(const Exp* exp1, const std::string& op,const Exp* exp2){
-    if(op == "AND"){
+    if(op == "and"){
         CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->trueList, midLabel);
         trueList = dynamic_cast<const BoolExp*>(exp2)->trueList;
-        falseList = CodeBuffer::instance().merge(dynamic_cast<const BoolExp*>(exp1)->falseList, dynamic_cast<const BoolExp*>(exp2)->falseList);
+        falseList = CodeBuffer::merge(dynamic_cast<const BoolExp*>(exp1)->falseList, dynamic_cast<const BoolExp*>(exp2)->falseList);
     }
-    else if (op == "OR"){
+    else if (op == "or"){
         CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->falseList, midLabel);
         falseList = dynamic_cast<const BoolExp*>(exp2)->falseList;
-        trueList = CodeBuffer::instance().merge(dynamic_cast<const BoolExp*>(exp1)->trueList, dynamic_cast<const BoolExp*>(exp2)->trueList);
+        trueList = CodeBuffer::merge(dynamic_cast<const BoolExp*>(exp1)->trueList, dynamic_cast<const BoolExp*>(exp2)->trueList);
     }
     else{
         Exp::emitOp(exp1, op, exp2);
+        emit();
     }
 
     return var;
@@ -158,7 +159,7 @@ std::string  BoolExp::evaluate() {
     CodeBuffer::instance().bpatch(CodeBuffer::makelist({false_bp, FIRST}), end_evaluation);
 
     string new_var = CodeBuffer::instance().freshVar();
-    str = new_var + " = phi i1 [  true, %" + true_evaluation + " ], [ false, %" + false_evaluation + " ]";
+    str = new_var + " = phi i1 [ true, %" + true_evaluation + " ], [ false, %" + false_evaluation + " ]";
     CodeBuffer::instance().emit(str);
     return new_var;
 }

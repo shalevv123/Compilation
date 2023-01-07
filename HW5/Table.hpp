@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "bp.hpp"
 struct TableEntry{
     std::string name;
     std::string type;
@@ -10,6 +11,8 @@ struct TableEntry{
     std::string var;
     TableEntry(std::string name, std::string type, int offset, std::string var = "");
 
+    std::string emit_store(const std::string& base_pointer) const;
+    std::string emit_load(const std::string& base_pointer) const;
 };
 class Table{
 public:

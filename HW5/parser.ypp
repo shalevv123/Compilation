@@ -130,8 +130,8 @@ FormalDecl:     Type ID {
                         }
 ;
 M:              /*epsilon*/ { 
-                                $$ = new BoolExp(CodeBuffer::instance().freshVar());
-                                $$->midLabel=  CodeBuffer::instance().genLabel(); 
+                                $$ = new BoolExp();
+                                static_cast<BoolExp*>($$)->midLabel = CodeBuffer::instance().genLabel(); 
                             }
 ;
 M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
@@ -161,9 +161,14 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                         scopeHandler.endScope();
                                                     }
                 | Type ID SC{
-                                if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type)){
+                                if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type, 
+                                    static_cast<Type*>($1)->type == "BOOL" ? "false" : std::to_string(0))){
                                     output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                     exit(0); 
+                                }
+                                else{
+                                    TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
+                                    entry->emit_store("%base"); //TODO: change base pointer
                                 }
                                 delete $1;     
                             }
@@ -174,9 +179,13 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0);
                                             }
                                             if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type,
-                                                 static_cast<Exp*>($4)->var)){
+                                                 static_cast<Type*>($4)->type == "BOOL" ? static_cast<BoolExp*>($4)->evaluate() :  static_cast<Exp*>($4)->var)){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
+                                            }
+                                            else{
+                                                TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
+                                                entry->emit_store("%base"); //TODO: change base pointer
                                             }
                                             delete $1;
                                             delete $4;
@@ -197,7 +206,8 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0); 
                                         }
 
-                                        entry->var = static_cast<Exp*>($3)->var;
+                                        entry->var = static_cast<Type*>($3)->type == "BOOL" ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
+                                        entry->emit_store("%base"); //TODO: change base pointer
                                         delete $3;
                                     }
                 | Call SC {
@@ -429,13 +439,21 @@ Exp:    LPAREN Exp RPAREN   {
                             }
         | ID{  
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
-                if(entry)
-                    if(entry->type.find("->") == -1)
-                        $$ = new Exp(entry->type, entry->var);
+                if(entry){
+                    std::string var = entry->emit_load("%base"); //TODO: change base pointer
+                    if(entry->type.find("->") == -1){
+                        if(entry->type == "BOOL"){
+                            $$ = new BoolExp(var);
+                            static_cast<BoolExp*>($$)->emit();
+                        }
+                        else
+                            $$ = new Exp(entry->type, var);
+                    }
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                         exit(0);                        
                     }
+                }
                 else{
                     output::errorUndef(yylineno, static_cast<Id*>($1)->name);
                     exit(0);
@@ -464,11 +482,11 @@ Exp:    LPAREN Exp RPAREN   {
 
         | TRUE  { 
                     $$ = new BoolExp("true");
-                    $$->emit(); 
+                    static_cast<BoolExp*>($$)->emit(); 
                 }
         | FALSE { 
                     $$ = new BoolExp("false");
-                    $$->emit();  
+                    static_cast<BoolExp*>($$)->emit();  
                 }
         | NOT Exp   { 
                         if(static_cast<Exp*>($2)->type == "BOOL")
@@ -488,8 +506,8 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp AND M Exp   {
                             if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($4)->type == "BOOL")
                             {    
-                                $$ = new static_cast<BoolExp*>($3);
-                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($4));
+                                $$ = static_cast<BoolExp*>($3);
+                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), "and", static_cast<Exp*>($4));
                             }
                             else{
                                 output::errorMismatch(yylineno);
@@ -502,8 +520,8 @@ Exp:    LPAREN Exp RPAREN   {
         | Exp OR M Exp{ 
                         if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($4)->type == "BOOL")
                             {    
-                                $$ = new static_cast<BoolExp*>($3);
-                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($4));
+                                $$ = static_cast<BoolExp*>($3);
+                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), "or", static_cast<Exp*>($4));
                             }
                         else{
                             output::errorMismatch(yylineno);

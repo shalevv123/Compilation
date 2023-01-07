@@ -30,6 +30,7 @@ struct Id : public Node {
     std::string name;
 
     explicit Id(const std::string& name);
+
 };
 
 struct Exp : public Node {
