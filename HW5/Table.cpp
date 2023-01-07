@@ -21,7 +21,7 @@ void Table::addEntry(std::string name, std::string type, int offset,  std::strin
     table.emplace_back(std::move(name), std::move(type), offset, var);
 }
 
-void Table::printEntries(){
+void Table::printEntries() const{
     for(auto& entry : table){
         output::printID(entry.name, entry.offset, entry.type, entry.var);
     }

@@ -15,7 +15,7 @@ class Table{
 public:
     TableEntry* findEntry(const std::string& name_to_find);
     void addEntry(std::string name, std::string type, int offset, std::string var = "");
-    void printEntries();
+    void printEntries() const;
 private:
     std::vector<TableEntry> table;
 };

@@ -6,8 +6,7 @@
 #include <iostream>
 extern int yylineno;
 using namespace std;
-ScopeHandler::ScopeHandler():
-        offsetStack(vector<int>()), tableStack(vector<Table>())
+ScopeHandler::ScopeHandler()
 {
     offsetStack.push_back(0);
     tableStack.emplace_back();
@@ -42,7 +41,7 @@ TableEntry* ScopeHandler::findSymbol(const std::string& name)
     return nullptr;
 }
 
-bool ScopeHandler::addSymbol(const std::string& name, std::string type, std::string var)
+bool ScopeHandler::addSymbol(const std::string& name, std::string type,const std::string var)
 {
     if (findSymbol(name))
         return false;

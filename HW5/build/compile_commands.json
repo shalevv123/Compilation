@@ -1,0 +1,27 @@
+[
+{
+  "directory": "E:/technion/compilation/HW5/build",
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\hw3_output.cpp.obj -c E:\\technion\\compilation\\HW5\\hw3_output.cpp",
+  "file": "E:/technion/compilation/HW5/hw3_output.cpp"
+},
+{
+  "directory": "E:/technion/compilation/HW5/build",
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\Table.cpp.obj -c E:\\technion\\compilation\\HW5\\Table.cpp",
+  "file": "E:/technion/compilation/HW5/Table.cpp"
+},
+{
+  "directory": "E:/technion/compilation/HW5/build",
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\ScopeHandler.cpp.obj -c E:\\technion\\compilation\\HW5\\ScopeHandler.cpp",
+  "file": "E:/technion/compilation/HW5/ScopeHandler.cpp"
+},
+{
+  "directory": "E:/technion/compilation/HW5/build",
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\Emits.cpp.obj -c E:\\technion\\compilation\\HW5\\Emits.cpp",
+  "file": "E:/technion/compilation/HW5/Emits.cpp"
+},
+{
+  "directory": "E:/technion/compilation/HW5/build",
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\bp.cpp.obj -c E:\\technion\\compilation\\HW5\\bp.cpp",
+  "file": "E:/technion/compilation/HW5/bp.cpp"
+}
+]
