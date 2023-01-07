@@ -102,6 +102,66 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
 }
 
 //BoolExp
+BoolExp::BoolExp(const std::string& var):
+        Exp("BOOL", var){};
+
+BoolExp::BoolExp(const std::vector<std::pair<int,BranchLabelIndex>>& trueList, 
+            const std::vector<std::pair<int,BranchLabelIndex>>& falseList, const std::string& var):
+        Exp("BOOL", var), trueList(trueList), falseList(falseList){};
+
+std::string BoolExp::emit(){
+    string str = "br i1 " + var + ", label @, label @";
+    int br = CodeBuffer::instance().emit(str);
+    trueList.emplace_back(br, FIRST);
+    falseList.emplace_back(br, SECOND);
+    return var;
+}
+
+std::string BoolExp::emitOp(const Exp* exp1, const std::string& op,const Exp* exp2){
+    if(op == "AND"){
+        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->trueList, midLabel);
+        trueList = dynamic_cast<const BoolExp*>(exp2)->trueList;
+        falseList = CodeBuffer::instance().merge(dynamic_cast<const BoolExp*>(exp1)->falseList, dynamic_cast<const BoolExp*>(exp2)->falseList);
+    }
+    else if (op == "OR"){
+        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->falseList, midLabel);
+        falseList = dynamic_cast<const BoolExp*>(exp2)->falseList;
+        trueList = CodeBuffer::instance().merge(dynamic_cast<const BoolExp*>(exp1)->trueList, dynamic_cast<const BoolExp*>(exp2)->trueList);
+    }
+    else{
+        Exp::emitOp(exp1, op, exp2);
+    }
+
+    return var;
+}
+std::string BoolExp::notOp(const Exp *exp) {
+    trueList = dynamic_cast<const BoolExp*>(exp)->falseList;
+    falseList = dynamic_cast<const BoolExp*>(exp)->trueList;
+    return var;
+}
+std::string  BoolExp::evaluate() {
+    string str;
+
+    string true_evaluation = CodeBuffer::instance().genLabel();
+    str = "br label @";
+    int true_bp = CodeBuffer::instance().emit(str);
+
+    string false_evaluation = CodeBuffer::instance().genLabel();
+    str = "br label @";
+    int false_bp = CodeBuffer::instance().emit(str);
+
+    string end_evaluation = CodeBuffer::instance().genLabel();
+
+    CodeBuffer::instance().bpatch(trueList, true_evaluation);
+    CodeBuffer::instance().bpatch(falseList, false_evaluation);
+    CodeBuffer::instance().bpatch(CodeBuffer::makelist({true_bp, FIRST}), end_evaluation);
+    CodeBuffer::instance().bpatch(CodeBuffer::makelist({false_bp, FIRST}), end_evaluation);
+
+    string new_var = CodeBuffer::instance().freshVar();
+    str = new_var + " = phi i1 [  true, %" + true_evaluation + " ], [ false, %" + false_evaluation + " ]";
+    CodeBuffer::instance().emit(str);
+    return new_var;
+}
 
 
 //StringExp

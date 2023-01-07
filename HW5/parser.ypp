@@ -129,7 +129,11 @@ FormalDecl:     Type ID {
                             delete $1;
                         }
 ;
-
+M:              /*epsilon*/ { 
+                                $$ = new BoolExp(CodeBuffer::instance().freshVar());
+                                $$->midLabel=  CodeBuffer::instance().genLabel(); 
+                            }
+;
 M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
 ;
 
@@ -459,14 +463,19 @@ Exp:    LPAREN Exp RPAREN   {
                 }   
 
         | TRUE  { 
-                    $$ = new Exp("BOOL"); 
+                    $$ = new BoolExp("true");
+                    $$->emit(); 
                 }
         | FALSE { 
-                    $$ = new Exp("BOOL"); 
+                    $$ = new BoolExp("false");
+                    $$->emit();  
                 }
         | NOT Exp   { 
                         if(static_cast<Exp*>($2)->type == "BOOL")
-                            $$ = new Exp("BOOL");
+                            {    
+                                $$ = new BoolExp(CodeBuffer::instance().freshVar());
+                                static_cast<BoolExp*>($$)->notOp(static_cast<Exp*>($2));
+                            }
                             
                         else{
                             output::errorMismatch(yylineno);
@@ -476,34 +485,40 @@ Exp:    LPAREN Exp RPAREN   {
 
                         delete $2; 
                     }
-        | Exp AND Exp   {
-                            if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
-                                $$ = new Exp("BOOL");
+        | Exp AND M Exp   {
+                            if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($4)->type == "BOOL")
+                            {    
+                                $$ = new static_cast<BoolExp*>($3);
+                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($4));
+                            }
                             else{
                                 output::errorMismatch(yylineno);
                                 exit(0);
                             }
 
                             delete $1;
-                            delete $3;     
+                            delete $4;     
                         }
-        | Exp OR Exp{ 
-                        if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($3)->type == "BOOL")
-                            $$ = new Exp("BOOL");
+        | Exp OR M Exp{ 
+                        if(static_cast<Exp*>($1)->type == "BOOL" and static_cast<Exp*>($4)->type == "BOOL")
+                            {    
+                                $$ = new static_cast<BoolExp*>($3);
+                                static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($4));
+                            }
                         else{
                             output::errorMismatch(yylineno);
                             exit(0);
                         }
                         
                         delete $1;
-                        delete $3;
+                        delete $4;
                     }      
         | Exp RELOP Exp { 
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
                                     {    
-                                        $$ = new Exp("BOOL", CodeBuffer::instance().freshVar());
-                                        static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($3));
+                                        $$ = new BoolExp(CodeBuffer::instance().freshVar());
+                                        static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($3));
                                     }
                             else{
                                 output::errorMismatch(yylineno);
@@ -517,8 +532,8 @@ Exp:    LPAREN Exp RPAREN   {
                             if((static_cast<Exp*>($1)->type == "INT" or static_cast<Exp*>($1)->type == "BYTE") 
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
                                     {    
-                                        $$ = new Exp("BOOL", CodeBuffer::instance().freshVar());
-                                        static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Equal*>($2)->op, static_cast<Exp*>($3));
+                                        $$ = new BoolExp(CodeBuffer::instance().freshVar());
+                                        static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Equal*>($2)->op, static_cast<Exp*>($3));
                                     }
                             else{
                                 output::errorMismatch(yylineno);

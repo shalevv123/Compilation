@@ -2,7 +2,10 @@
 #define NODE
 #include <string>
 #include <vector>
-struct Node{};
+#include "bp.hpp"
+struct Node{
+    virtual ~Node() = default;
+};
 
 
 struct Type : public Node {
@@ -33,10 +36,25 @@ struct Exp : public Node {
     std::string type;
     std::string var;
     Exp(const std::string& type, const std::string& var = "");
-    std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2);
+    virtual std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2);
+
+    virtual ~Exp() = default;
 };
 
 struct BoolExp: public Exp{
+    std::vector<std::pair<int,BranchLabelIndex>> trueList = std::vector<std::pair<int,BranchLabelIndex>>();
+    std::vector<std::pair<int,BranchLabelIndex>> falseList = std::vector<std::pair<int,BranchLabelIndex>>();
+
+    std::string midLabel;
+
+    explicit BoolExp(const std::string& var = "");
+    BoolExp(const std::vector<std::pair<int,BranchLabelIndex>>& trueList, 
+            const std::vector<std::pair<int,BranchLabelIndex>>& falseList, const std::string& var = "");
+    
+    std::string emit();
+    std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2) override ;
+    std::string notOp(const Exp* exp);
+    std::string evaluate();
 
 };
 
