@@ -17,6 +17,10 @@
     std::vector<std::string> argNames;
     std::vector<std::string> argTypes;
     int while_count = 0;
+    std::vector<std::vector<std::pair<int,BranchLabelIndex>>> breakList;
+    std::vector<std::vector<std::pair<int,BranchLabelIndex>>> continueList;
+    bool returned = false;
+    std::string returnLabel;
     ScopeHandler scopeHandler;
 %}
 
@@ -96,9 +100,19 @@ FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Form
                                                                     func_name = "";
                                                                     argNames.clear();
                                                                     argTypes.clear();
-
+                                                                    if(!returned){
+                                                                        returnLabel = CodeBuffer::instance().genLabel();
+                                                                        std::string str = "ret void";
+                                                                        CodeBuffer::instance().emit(str);
+                                                                        str = "}";
+                                                                        CodeBuffer::instance().emit(str);
+                                                                    }
+                                                                    CodeBuffer::instance().bpatch(static_cast<Statement*>($9)->nextList, returnLabel);
+                                                                    returned = false;
+                                                                    returnLabel = "";
 
                                                                     delete $1;
+                                                                    delete $9;
                                                                 }
 ;
 
@@ -134,13 +148,24 @@ M:              /*epsilon*/ {
                                 static_cast<BoolExp*>($$)->midLabel = CodeBuffer::instance().genLabel(); 
                             }
 ;
+N:              /*epsilon*/ {
+                                $$ = new Statement();
+                                std::string str = "br label @";
+                                int label = CodeBuffer::instance().emit(str);
+                                static_cast<Statement*>($$)->nextList.emplace_back(label, FIRST);
+                            }
+;
 M_New_Scope:   /*epsilon*/ {scopeHandler.newScope();}
 ;
 
 M_End_Scope:   /*epsilon*/ {scopeHandler.endScope();}
 ;
 
-M_While:        /*epsilon*/ {while_count++;}
+M_While:        /*epsilon*/ {
+                                while_count++;
+                                breakList.emplace_back();
+                                continueList.emplace_back();
+                            }
 ;
 
 M_Add_Function: /*epsilon*/ { 
@@ -152,13 +177,31 @@ M_Add_Function: /*epsilon*/ {
                             }
 ;
 
-Statements:     Statement {}
-                |Statements Statement {}
+Statements:     Statement   {
+                                $$ = new Statement();
+                                static_cast<Statement*>($$)->nextList = static_cast<Statement*>($1)->nextList; 
+
+                                delete $1;
+                            }
+                |Statements M Statement {
+                                            $$ = new Statement();
+                                            static_cast<Statement*>($$)->nextList = static_cast<Statement*>($3)->nextList; 
+                                            CodeBuffer::instance().bpatch(static_cast<Statement*>($1)->nextList, 
+                                                                          static_cast<BoolExp*>($2)->midLabel);
+                                            delete $1;
+                                            delete $2;
+                                            delete $3;
+                                        }
+
                 
 ;
 
 Statement:      LBRACE M_New_Scope Statements RBRACE{
+                                                        $$ = new Statement();
+                                                        static_cast<Statement*>($$)->nextList = static_cast<Statement*>($3)->nextList;
                                                         scopeHandler.endScope();
+
+                                                        delete $3;
                                                     }
                 | Type ID SC{
                                 if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name, static_cast<Type*>($1)->type, 
@@ -169,6 +212,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                 else{
                                     TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
                                     entry->emit_store("%base"); //TODO: change base pointer
+                                    $$ = new Statement();
                                 }
                                 delete $1;     
                             }
@@ -186,6 +230,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                             else{
                                                 TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
                                                 entry->emit_store("%base"); //TODO: change base pointer
+                                                $$ = new Statement();
                                             }
                                             delete $1;
                                             delete $4;
@@ -208,6 +253,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
 
                                         entry->var = static_cast<Type*>($3)->type == "BOOL" ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
                                         entry->emit_store("%base"); //TODO: change base pointer
+                                        $$ = new Statement();
                                         delete $3;
                                     }
                 | Call SC {
@@ -219,7 +265,6 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     output::errorMismatch(yylineno);
                                     exit(0);
                                 }
-                                    
                             }
                 | RETURN Exp SC {
                                     if(ret_type == "VOID"){
@@ -231,27 +276,84 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         output::errorMismatch(yylineno);
                                         exit(0);
                                     }
-
+                                    returnLabel = CodeBuffer::instance().genLabel();
+                                    // TODO: add return line
+                                    returned = true;
 
                                     delete $2;
                                 }
-                | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement { scopeHandler.endScope(); }
-                | IF LPAREN M_Bool_Exp RPAREN M_New_Scope Statement ELSE M_End_Scope M_New_Scope Statement {scopeHandler.endScope();}
-                | WHILE M_While LPAREN M_Bool_Exp RPAREN M_New_Scope Statement{
+                | IF LPAREN M_Bool_Exp RPAREN M M_New_Scope Statement   { 
+                                                                            scopeHandler.endScope();
+                                                                            CodeBuffer::instance().bpatch(static_cast<BoolExp*>($3)->trueList,
+                                                                                                          static_cast<BoolExp*>($5)->midLabel);
+                                                                            $$ = new Statement();
+                                                                            static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<BoolExp*>($3)->falseList,
+                                                                                                                                      static_cast<Statement*>($7)->nextList);
+                                                                            delete $3;
+                                                                            delete $5;
+                                                                            delete $7;
+                                                                        }
+                | IF LPAREN M_Bool_Exp RPAREN M M_New_Scope Statement N ELSE M_End_Scope M_New_Scope M Statement{
+                                                                                                                    scopeHandler.endScope();
+                                                                                                                    CodeBuffer::instance().bpatch(static_cast<BoolExp*>($3)->trueList,
+                                                                                                                                                  static_cast<BoolExp*>($5)->midLabel);
+                                                                                                                    CodeBuffer::instance().bpatch(static_cast<BoolExp*>($3)->falseList,
+                                                                                                                                                  static_cast<BoolExp*>($12)->midLabel);
+
+                                                                                                                    $$ = new Statement();
+                                                                                                                    static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<Statement*>($7)->nextList, CodeBuffer::merge(static_cast<Statement*>($8)->nextList,
+                                                                                                                                                                              static_cast<Statement*>($13)->nextList));                              
+
+                                                                                                                    delete $3;
+                                                                                                                    delete $5;
+                                                                                                                    delete $7;
+                                                                                                                    delete $8;
+                                                                                                                    delete $12;
+                                                                                                                    delete $13;
+                                                                                                                }
+                | WHILE M_While M LPAREN M_Bool_Exp RPAREN M_New_Scope M Statement{
+
+                                                                                        CodeBuffer::instance().bpatch(static_cast<BoolExp*>($5)->trueList,
+                                                                                                                      static_cast<BoolExp*>($8)->midLabel);
+                                                                                        CodeBuffer::instance().bpatch(static_cast<Statement*>($9)->nextList,
+                                                                                                                      static_cast<BoolExp*>($3)->midLabel);
+                                                                                        $$ = new Statement();
+                                                                                        static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<BoolExp*>($5)->falseList, breakList.back());
+                                                                                        std::string str = "br label %" + static_cast<BoolExp*>($3)->midLabel;
+                                                                                        CodeBuffer::instance().emit(str);
+
+                                                                                        CodeBuffer::instance().bpatch(continueList.back(),
+                                                                                                                      static_cast<BoolExp*>($3)->midLabel);
                                                                                         while_count--;
+                                                                                        breakList.pop_back();
+                                                                                        continueList.pop_back();
                                                                                         scopeHandler.endScope();
+
+                                                                                        delete $3;
+                                                                                        delete $5;
+                                                                                        delete $8;
+                                                                                        delete $9;
                                                                                     }
-                | BREAK SC {
-                             if(!while_count){
-                                output::errorUnexpectedBreak(yylineno);
-                                exit(0);
-                             }
+                | BREAK SC  {
+                                if(!while_count){
+                                    output::errorUnexpectedBreak(yylineno);
+                                    exit(0);
+                                }
+                                $$ = new Statement();
+                                std::string str = "br label @";
+                                int bp = CodeBuffer::instance().emit(str);
+                                breakList.back().emplace_back(bp, FIRST);
                             }
                 | CONTINUE SC   {
-                                 if (!while_count){
-                                    output::errorUnexpectedContinue(yylineno);
-                                    exit(0);
-                                 }
+                                    if (!while_count){
+                                        output::errorUnexpectedContinue(yylineno);
+                                        exit(0);
+                                    }
+                                    $$ = new Statement();
+                                    std::string str = "br label @";
+                                    int bp = CodeBuffer::instance().emit(str);
+                                    continueList.back().emplace_back(bp, FIRST);
+
                                 }
 ;
 
@@ -335,7 +437,7 @@ M_Bool_Exp: Exp {
                         output::errorMismatch(yylineno);
                         exit(0);
                     }
-                    $$ = new Exp(static_cast<Exp*>($1)->type);
+                    $$ = new BoolExp(static_cast<Exp*>($1)->var);
 
                     delete $1;
                 }
@@ -348,12 +450,10 @@ Exp:    LPAREN Exp RPAREN   {
                             }
         | Exp IF LPAREN M_Bool_Exp RPAREN ELSE Exp %prec TERNARY
                                             {
-                                                if(static_cast<Exp*>($4)->type == "BOOL" and 
-                                                (static_cast<Exp*>($1)->type == static_cast<Exp*>($7)->type or (static_cast<Exp*>($1)->type == "BYTE" and static_cast<Exp*>($7)->type == "INT"))){
+                                                if(static_cast<Exp*>($1)->type == static_cast<Exp*>($7)->type or (static_cast<Exp*>($1)->type == "BYTE" and static_cast<Exp*>($7)->type == "INT")){
                                                     $$ = new Exp(static_cast<Exp*>($7)->type);
                                                 }
-                                                else if(static_cast<Exp*>($4)->type == "BOOL" and 
-                                                (static_cast<Exp*>($1)->type == "INT" and static_cast<Exp*>($7)->type == "BYTE")){
+                                                else if(static_cast<Exp*>($1)->type == "INT" and static_cast<Exp*>($7)->type == "BYTE"){
                                                     $$ = new Exp(static_cast<Exp*>($1)->type);
                                                 }
                                                 else{
@@ -491,7 +591,7 @@ Exp:    LPAREN Exp RPAREN   {
         | NOT Exp   { 
                         if(static_cast<Exp*>($2)->type == "BOOL")
                             {    
-                                $$ = new BoolExp(CodeBuffer::instance().freshVar());
+                                $$ = new BoolExp(static_cast<Exp*>($2)->var);
                                 static_cast<BoolExp*>($$)->notOp(static_cast<Exp*>($2));
                             }
                             

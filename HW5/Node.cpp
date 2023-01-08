@@ -60,6 +60,8 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
         CodeBuffer::instance().emit(str);
         str = "call void @exit(i32 0)";
         CodeBuffer::instance().emit(str);
+        str = "unreachable";
+        CodeBuffer::instance().emit(str);
 
         string falseLabel = CodeBuffer::instance().genLabel();
         CodeBuffer::instance().bpatch(CodeBuffer::makelist({fill,FIRST}), trueLabel);
@@ -205,3 +207,5 @@ MulDiv::MulDiv(const std::string &op):
 //PlusMinus
 PlusMinus::PlusMinus(const std::string &op):
         op(op){};
+
+//Statement

@@ -16,8 +16,8 @@
 },
 {
   "directory": "E:/technion/compilation/HW5/build",
-  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\Emits.cpp.obj -c E:\\technion\\compilation\\HW5\\Emits.cpp",
-  "file": "E:/technion/compilation/HW5/Emits.cpp"
+  "command": "E:\\programing\\compiler\\mingw\\mingw32\\bin\\g++.exe   -g -std=gnu++17 -o CMakeFiles\\hw5.dir\\Node.cpp.obj -c E:\\technion\\compilation\\HW5\\Node.cpp",
+  "file": "E:/technion/compilation/HW5/Node.cpp"
 },
 {
   "directory": "E:/technion/compilation/HW5/build",

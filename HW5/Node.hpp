@@ -108,6 +108,10 @@ struct PlusMinus : public Node {
     explicit PlusMinus(const std::string& op);
 };
 
+struct Statement: public Node{
+    std::vector<std::pair<int,BranchLabelIndex>> nextList = std::vector<std::pair<int,BranchLabelIndex>>();
+
+};
 #define YYSTYPE Node*
 
 #endif //Node

@@ -110,19 +110,19 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hw5.dir/ScopeHandler.cpp.s"
 	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\technion\compilation\HW5\ScopeHandler.cpp -o CMakeFiles\hw5.dir\ScopeHandler.cpp.s
 
-CMakeFiles/hw5.dir/Emits.cpp.obj: CMakeFiles/hw5.dir/flags.make
-CMakeFiles/hw5.dir/Emits.cpp.obj: E:/technion/compilation/HW5/Emits.cpp
-CMakeFiles/hw5.dir/Emits.cpp.obj: CMakeFiles/hw5.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=E:\technion\compilation\HW5\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hw5.dir/Emits.cpp.obj"
-	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hw5.dir/Emits.cpp.obj -MF CMakeFiles\hw5.dir\Emits.cpp.obj.d -o CMakeFiles\hw5.dir\Emits.cpp.obj -c E:\technion\compilation\HW5\Emits.cpp
+CMakeFiles/hw5.dir/Node.cpp.obj: CMakeFiles/hw5.dir/flags.make
+CMakeFiles/hw5.dir/Node.cpp.obj: E:/technion/compilation/HW5/Node.cpp
+CMakeFiles/hw5.dir/Node.cpp.obj: CMakeFiles/hw5.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=E:\technion\compilation\HW5\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hw5.dir/Node.cpp.obj"
+	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hw5.dir/Node.cpp.obj -MF CMakeFiles\hw5.dir\Node.cpp.obj.d -o CMakeFiles\hw5.dir\Node.cpp.obj -c E:\technion\compilation\HW5\Node.cpp
 
-CMakeFiles/hw5.dir/Emits.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hw5.dir/Emits.cpp.i"
-	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\technion\compilation\HW5\Emits.cpp > CMakeFiles\hw5.dir\Emits.cpp.i
+CMakeFiles/hw5.dir/Node.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hw5.dir/Node.cpp.i"
+	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E E:\technion\compilation\HW5\Node.cpp > CMakeFiles\hw5.dir\Node.cpp.i
 
-CMakeFiles/hw5.dir/Emits.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hw5.dir/Emits.cpp.s"
-	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\technion\compilation\HW5\Emits.cpp -o CMakeFiles\hw5.dir\Emits.cpp.s
+CMakeFiles/hw5.dir/Node.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hw5.dir/Node.cpp.s"
+	E:\programing\compiler\mingw\mingw32\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S E:\technion\compilation\HW5\Node.cpp -o CMakeFiles\hw5.dir\Node.cpp.s
 
 CMakeFiles/hw5.dir/bp.cpp.obj: CMakeFiles/hw5.dir/flags.make
 CMakeFiles/hw5.dir/bp.cpp.obj: E:/technion/compilation/HW5/bp.cpp
@@ -143,7 +143,7 @@ hw5_OBJECTS = \
 "CMakeFiles/hw5.dir/hw3_output.cpp.obj" \
 "CMakeFiles/hw5.dir/Table.cpp.obj" \
 "CMakeFiles/hw5.dir/ScopeHandler.cpp.obj" \
-"CMakeFiles/hw5.dir/Emits.cpp.obj" \
+"CMakeFiles/hw5.dir/Node.cpp.obj" \
 "CMakeFiles/hw5.dir/bp.cpp.obj"
 
 # External object files for target hw5
@@ -152,7 +152,7 @@ hw5_EXTERNAL_OBJECTS =
 hw5.exe: CMakeFiles/hw5.dir/hw3_output.cpp.obj
 hw5.exe: CMakeFiles/hw5.dir/Table.cpp.obj
 hw5.exe: CMakeFiles/hw5.dir/ScopeHandler.cpp.obj
-hw5.exe: CMakeFiles/hw5.dir/Emits.cpp.obj
+hw5.exe: CMakeFiles/hw5.dir/Node.cpp.obj
 hw5.exe: CMakeFiles/hw5.dir/bp.cpp.obj
 hw5.exe: CMakeFiles/hw5.dir/build.make
 hw5.exe: CMakeFiles/hw5.dir/linkLibs.rsp

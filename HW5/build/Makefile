@@ -128,29 +128,29 @@ hw5/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/build
 .PHONY : hw5/fast
 
-Emits.obj: Emits.cpp.obj
-.PHONY : Emits.obj
+Node.obj: Node.cpp.obj
+.PHONY : Node.obj
 
 # target to build an object file
-Emits.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Emits.cpp.obj
-.PHONY : Emits.cpp.obj
+Node.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Node.cpp.obj
+.PHONY : Node.cpp.obj
 
-Emits.i: Emits.cpp.i
-.PHONY : Emits.i
+Node.i: Node.cpp.i
+.PHONY : Node.i
 
 # target to preprocess a source file
-Emits.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Emits.cpp.i
-.PHONY : Emits.cpp.i
+Node.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Node.cpp.i
+.PHONY : Node.cpp.i
 
-Emits.s: Emits.cpp.s
-.PHONY : Emits.s
+Node.s: Node.cpp.s
+.PHONY : Node.s
 
 # target to generate assembly for a file
-Emits.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Emits.cpp.s
-.PHONY : Emits.cpp.s
+Node.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\hw5.dir\build.make CMakeFiles/hw5.dir/Node.cpp.s
+.PHONY : Node.cpp.s
 
 ScopeHandler.obj: ScopeHandler.cpp.obj
 .PHONY : ScopeHandler.obj
@@ -257,9 +257,9 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... hw5
-	@echo ... Emits.obj
-	@echo ... Emits.i
-	@echo ... Emits.s
+	@echo ... Node.obj
+	@echo ... Node.i
+	@echo ... Node.s
 	@echo ... ScopeHandler.obj
 	@echo ... ScopeHandler.i
 	@echo ... ScopeHandler.s
