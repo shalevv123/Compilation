@@ -55,7 +55,7 @@ struct BoolExp: public Exp{
     std::string emit();
     std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2) override ;
     std::string notOp(const Exp* exp);
-    std::string evaluate();
+    std::string evaluate() const;
 
 };
 

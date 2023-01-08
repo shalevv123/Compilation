@@ -142,7 +142,7 @@ std::string BoolExp::notOp(const Exp *exp) {
     falseList = dynamic_cast<const BoolExp*>(exp)->trueList;
     return var;
 }
-std::string  BoolExp::evaluate() {
+std::string  BoolExp::evaluate() const{
     string str;
 
     string true_evaluation = CodeBuffer::instance().genLabel();
