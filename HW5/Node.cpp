@@ -104,8 +104,8 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
 }
 
 //BoolExp
-BoolExp::BoolExp(const std::string& var):
-        Exp("BOOL", var){};
+BoolExp::BoolExp(const std::string& var, bool fresh):
+        Exp("BOOL", var), fresh(fresh){};
 
 std::string BoolExp::emit(){
     string str = "br i1 " + var + ", label @, label @";

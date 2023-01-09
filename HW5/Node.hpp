@@ -47,8 +47,8 @@ struct BoolExp: public Exp{
     std::vector<std::pair<int,BranchLabelIndex>> falseList = std::vector<std::pair<int,BranchLabelIndex>>();
 
     std::string midLabel;
-
-    explicit BoolExp(const std::string& var = "");
+    bool fresh;
+    explicit BoolExp(const std::string& var = "", bool fresh = true);
 
     std::string emit();
     std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2) override ;

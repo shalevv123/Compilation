@@ -118,8 +118,6 @@ FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Form
                                                                     baseList.clear();
                                                                     argNames.clear();
                                                                     argTypes.clear();
-
-                                                                    delete $1;
                                                                     delete $9;
                                                                 }
 ;
@@ -272,7 +270,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0);
                                             }
                                             if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type,
-                                                 static_cast<Type*>($4)->type == "BOOL" ? static_cast<BoolExp*>($4)->evaluate() :  static_cast<Exp*>($4)->var)){
+                                                 (static_cast<Exp*>($4)->type == "BOOL" and static_cast<BoolExp*>($4)->fresh) ? static_cast<BoolExp*>($4)->evaluate() :  static_cast<Exp*>($4)->var)){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
                                             }
@@ -300,7 +298,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0); 
                                         }
 
-                                        entry->var = static_cast<Type*>($3)->type == "BOOL" ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
+                                        entry->var = (static_cast<Exp*>($3)->type == "BOOL" and static_cast<BoolExp*>($3)->fresh) ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
                                         entry->emit_store(base, baseList); //TODO: change base pointer
                                         $$ = new Statement();
                                         delete $3;
@@ -319,7 +317,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
 
                                 std::string str = "ret void";
                                 CodeBuffer::instance().emit(str);
-
+                                
                             }
                 | RETURN Exp SC {
                                     if(ret_type == "VOID"){
@@ -333,7 +331,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     }
                                     $$ = new Statement();
                                     static_cast<Statement*>($$)->isRet = true;
-                                    if(static_cast<Exp*>($2)->type == "BOOL"){
+                                    if(static_cast<Exp*>($2)->type == "BOOL" and static_cast<BoolExp*>($2)->fresh){
                                         std::string var = static_cast<BoolExp*>($2)->evaluate();
                                         std::string str = "ret " + var;
                                         CodeBuffer::instance().emit(str);
@@ -343,7 +341,6 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         std::string str = "ret " + var;
                                         CodeBuffer::instance().emit(str);
                                     }
-
                                     delete $2;
                                 }
                 | IF LPAREN M_Bool_Exp RPAREN M M_New_Scope Statement{ 
@@ -458,7 +455,10 @@ Call:       ID LPAREN ExpList RPAREN{
                                         std::vector<std::string> varlist;
                                         for (auto& exp: static_cast<ExpList*>($3)->expressions){
                                             if(exp->type == "BOOL")
-                                                varlist.push_back("i1 " + dynamic_cast<BoolExp*>(exp)->evaluate());
+                                                if (dynamic_cast<BoolExp*>(exp)->fresh)
+                                                    varlist.push_back("i1 " + dynamic_cast<BoolExp*>(exp)->evaluate());
+                                                else
+                                                    varlist.push_back("i1 " + dynamic_cast<BoolExp*>(exp)->var);
                                             else if(exp->type == "STRING"){
                                                 varlist.push_back(dynamic_cast<StringExp*>(exp)->var);
                                             }    
@@ -482,7 +482,7 @@ Call:       ID LPAREN ExpList RPAREN{
                                         CodeBuffer::instance().emit(str);
 
                                         $$ = new Call(getFuncReturn(entry), new_var);
-                                        delete $3;                                    
+                                        delete $3;
                                     }
             | ID LPAREN RPAREN  {
                                     TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
@@ -516,7 +516,7 @@ Call:       ID LPAREN ExpList RPAREN{
 ExpList:    Exp {
                     ExpList* expList = new ExpList(std::vector<Exp*>());
                     if (static_cast<Exp*>($1)->type == "BOOL")
-                        expList->expressions.push_back(new BoolExp(static_cast<BoolExp*>($1)->var));
+                        expList->expressions.push_back(new BoolExp(static_cast<BoolExp*>($1)->var, static_cast<BoolExp*>($1)->fresh));
                     else if (static_cast<Exp*>($1)->type == "STRING")
                         expList->expressions.push_back(new StringExp(static_cast<StringExp*>($1)->value, static_cast<Exp*>($1)->var));
                     else
@@ -528,7 +528,7 @@ ExpList:    Exp {
             | Exp COMMA ExpList {
                                     ExpList* expList = new ExpList(static_cast<ExpList*>($3)->expressions); //potential bug
                                     if (static_cast<Exp*>($1)->type == "BOOL")
-                                        expList->expressions.insert(expList->expressions.begin(), new BoolExp(static_cast<BoolExp*>($1)->var));
+                                        expList->expressions.insert(expList->expressions.begin(), new BoolExp(static_cast<BoolExp*>($1)->var, static_cast<BoolExp*>($1)->fresh));
                                     else if (static_cast<Exp*>($1)->type == "STRING")
                                         expList->expressions.insert(expList->expressions.begin(), new StringExp(static_cast<StringExp*>($1)->value, static_cast<Exp*>($1)->var));
                                     else
@@ -696,8 +696,11 @@ Exp:    LPAREN Exp RPAREN   {
                     exit(0);
                 }
             }
-        | Call {  
-                    $$ = new Exp(static_cast<Call*>($1)->type, static_cast<Call*>($1)->var);
+        | Call {    
+                    if(static_cast<Call*>($1)->type == "BOOL")
+                        $$ = new BoolExp(static_cast<Call*>($1)->var, false);
+                    else
+                        $$ = new Exp(static_cast<Call*>($1)->type, static_cast<Call*>($1)->var);
 
                     delete $1;
                }
