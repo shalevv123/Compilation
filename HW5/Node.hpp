@@ -110,6 +110,8 @@ struct PlusMinus : public Node {
 
 struct Statement: public Node{
     std::vector<std::pair<int,BranchLabelIndex>> nextList = std::vector<std::pair<int,BranchLabelIndex>>();
+    bool isRet = false;
+    bool isControl = false;
 
 };
 #define YYSTYPE Node*

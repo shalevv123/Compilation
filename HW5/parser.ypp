@@ -6,7 +6,7 @@
     #include "bp.hpp"
     #include <string>
     #include <memory>
-    #define YYDEBUG 1
+    //#define YYDEBUG 1
     using namespace std;
     using namespace output;
     int yylex();
@@ -94,20 +94,27 @@ Funcs:          /*epsilon*/{}
 
 FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Formals RPAREN M_Add_Function /*a new scope is created*/
                 LBRACE Statements RBRACE /* release marker*/    {
+                                                                    std::string str;
+                                                                    if(!returned){
+                                                                        
+                                                                        if (ret_type == "VOID") 
+                                                                            str = "ret void";
+                                                                        else if (ret_type == "INT" or ret_type == "BYTE")
+                                                                            str = "ret i32 0";
+                                                                        else if (ret_type == "BOOL")
+                                                                            str = "ret i1 0";
+                                                                        CodeBuffer::instance().emit(str);
+                                                                    }
+                                                                
+                                                                    str = "}";
+                                                                    CodeBuffer::instance().emit(str);
+                                                                    
+                                                                    returned = false;
                                                                     scopeHandler.endScope();
                                                                     ret_type = "";
                                                                     func_name = "";
                                                                     argNames.clear();
                                                                     argTypes.clear();
-                                                                    
-                                                                    if(!returned){
-                                                                        std::string str = "ret void";
-                                                                        CodeBuffer::instance().emit(str);
-                                                                    }
-                                                                
-                                                                    std::string str = "}";
-                                                                    CodeBuffer::instance().emit(str);
-                                                                    returned = false;
 
                                                                     delete $1;
                                                                     delete $9;
@@ -141,12 +148,12 @@ FormalDecl:     Type ID {
                             delete $1;
                         }
 ;
-M:  /*epsilon*/ { 
+M:  /*epsilon*/ %prec LOW_PRIORITY{ 
                                 $$ = new BoolExp();
                                 static_cast<BoolExp*>($$)->midLabel = CodeBuffer::instance().genLabel(); 
                             }
 ;
-N:     /*epsilon*/ {  
+N:     /*epsilon*/ %prec LOW_PRIORITY{  
                                 $$ = new Statement();
                                 std::string str = "br label @";
                                 int label = CodeBuffer::instance().emit(str);
@@ -177,29 +184,36 @@ M_Add_Function: /*epsilon*/ {
                             }
 ;
 
-Statements:     Statement N M{
+Statements:     Statement{
 
                                 $$ = new Statement();
-                                CodeBuffer::instance().bpatch(CodeBuffer::merge(static_cast<Statement*>($1)->nextList,
-                                                                                static_cast<Statement*>($2)->nextList),  
-                                                                                static_cast<BoolExp*>($3)->midLabel);
+                                returned = static_cast<Statement*>($1)->isRet;
+                                    
+                                if (static_cast<Statement*>($1)->isControl){
+                                    std::string str = "br label @";
+                                    int br = CodeBuffer::instance().emit(str);
+                                    std::string label = CodeBuffer::instance().genLabel(); 
+                                    CodeBuffer::instance().bpatch(CodeBuffer::merge(static_cast<Statement*>($1)->nextList,
+                                                                                    CodeBuffer::makelist({br, FIRST})),  
+                                                                                    label);
+                                }
                                 delete $1;
-                                delete $2;
-                                delete $3;
                             }
-                |Statements Statement N M {
+                |Statements Statement  {
                                             $$ = new Statement();
-                                            CodeBuffer::instance().bpatch(CodeBuffer::merge(static_cast<Statement*>($2)->nextList,
-                                                                                            static_cast<Statement*>($3)->nextList),  
-                                                                          static_cast<BoolExp*>($4)->midLabel); 
-                                            
+                                            returned = static_cast<Statement*>($2)->isRet;
 
-                                            static_cast<Statement*>($$)->nextList = static_cast<Statement*>($1)->nextList;                                             
-
+                                            if (static_cast<Statement*>($2)->isControl){
+                                                std::string str = "br label @";
+                                                int br = CodeBuffer::instance().emit(str);
+                                                std::string label = CodeBuffer::instance().genLabel(); 
+                                                CodeBuffer::instance().bpatch(CodeBuffer::merge(static_cast<Statement*>($2)->nextList,
+                                                                                                CodeBuffer::makelist({br, FIRST})),  
+                                                                                                label);
+                                            }                                            
+                                
                                             delete $1;
                                             delete $2;
-                                            delete $3;
-                                            delete $4;
                                         }
 
                 
@@ -275,6 +289,10 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     exit(0);
                                 }
                                 $$ = new Statement();
+                                static_cast<Statement*>($$)->isRet = true;
+
+                                std::string str = "ret void";
+                                CodeBuffer::instance().emit(str);
 
                             }
                 | RETURN Exp SC {
@@ -288,7 +306,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         exit(0);
                                     }
                                     $$ = new Statement();
-                                    returned = true;
+                                    static_cast<Statement*>($$)->isRet = true;
                                     delete $2;
                                 }
                 | IF LPAREN M_Bool_Exp RPAREN M M_New_Scope Statement{ 
@@ -296,6 +314,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                                             CodeBuffer::instance().bpatch(static_cast<BoolExp*>($3)->trueList,
                                                                                                           static_cast<BoolExp*>($5)->midLabel);
                                                                             $$ = new Statement();
+                                                                            static_cast<Statement*>($$)->isControl = true;
 
                                                                         
                                                                             static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<BoolExp*>($3)->falseList,
@@ -313,6 +332,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                                                                                                                   static_cast<BoolExp*>($12)->midLabel);
 
                                                                                                                     $$ = new Statement();
+                                                                                                                    static_cast<Statement*>($$)->isControl = true;
                                                                                                                     static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<Statement*>($7)->nextList, 
                                                                                                                                                             CodeBuffer::merge(static_cast<Statement*>($9)->nextList,
                                                                                                                                                                               static_cast<Statement*>($13)->nextList));                              
@@ -331,6 +351,8 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                                                         CodeBuffer::instance().bpatch(static_cast<Statement*>($9)->nextList,
                                                                                                                       static_cast<BoolExp*>($3)->midLabel);
                                                                                         $$ = new Statement();
+                                                                                        static_cast<Statement*>($$)->isControl = true;
+
                                                                                         static_cast<Statement*>($$)->nextList = CodeBuffer::merge(static_cast<BoolExp*>($5)->falseList,
                                                                                                                                                   breakList.back());
 
@@ -740,7 +762,7 @@ void prologue(){
 
 int main() {
 
-    yydebug = 1;
+    //yydebug = 1;
     prologue();
     return yyparse();
 }
