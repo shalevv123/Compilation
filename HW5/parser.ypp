@@ -21,6 +21,8 @@
     std::vector<std::vector<std::pair<int,BranchLabelIndex>>> continueList;
     ScopeHandler scopeHandler;
     bool returned = false; // FIX return check
+    std::string base;
+    std::vector<std::pair<int,BranchLabelIndex>> baseList;
 %}
 %nonassoc LOW_PRIORITY
 %nonassoc VOID
@@ -95,8 +97,7 @@ Funcs:          /*epsilon*/{}
 FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Formals RPAREN M_Add_Function /*a new scope is created*/
                 LBRACE Statements RBRACE /* release marker*/    {
                                                                     std::string str;
-                                                                    if(!returned){
-                                                                        
+                                                                    if(!returned){ 
                                                                         if (ret_type == "VOID") 
                                                                             str = "ret void";
                                                                         else if (ret_type == "INT" or ret_type == "BYTE")
@@ -105,14 +106,16 @@ FuncDecl:       RetType ID {func_name = static_cast<Id*>($2)->name;} LPAREN Form
                                                                             str = "ret i1 0";
                                                                         CodeBuffer::instance().emit(str);
                                                                     }
-                                                                
                                                                     str = "}";
                                                                     CodeBuffer::instance().emit(str);
-                                                                    
+
+                                                                    CodeBuffer::instance().bpatchSize(baseList, std::to_string(scopeHandler.localVars()));
                                                                     returned = false;
                                                                     scopeHandler.endScope();
                                                                     ret_type = "";
                                                                     func_name = "";
+                                                                    base = "";
+                                                                    baseList.clear();
                                                                     argNames.clear();
                                                                     argTypes.clear();
 
@@ -173,14 +176,37 @@ M_While:        /*epsilon*/ {
                             }
 ;
 
-M_Add_Function: /*epsilon*/ { 
+M_Add_Function: /*epsilon*/ {
+                                 
                                 std::shared_ptr<std::string> bad_name = scopeHandler.addFunction(func_name, ret_type, argNames, argTypes);
                                 if(bad_name){
                                     output::errorDef(yylineno, *bad_name);
                                     exit(0);   
                                 }
-                                std::string str = "{";
+
+
+                                std::string str = "";
+                                str += "define ";
+                                if (ret_type == "BOOL")
+                                    str+= "i1 ";
+                                else if(ret_type == "VOID")
+                                    str+= "void ";
+                                else
+                                    str+= "i32 ";
+                                str += "@" + func_name + "(";
+                                if(!argTypes.empty()){
+                                for (auto& type : argTypes)
+                                    str += type == "BOOL" ? "i1, " : "i32, ";
+                                str.pop_back();
+                                str.pop_back();
+                                }
+                                str += ") {";
                                 CodeBuffer::instance().emit(str);
+                                std::string var = CodeBuffer::instance().freshVar();
+                                str = var + " = alloca [@ x i32]";
+                                int bp = CodeBuffer::instance().emit(str);
+                                base = var;
+                                baseList.emplace_back(bp, FIRST);
                             }
 ;
 
@@ -234,7 +260,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                 }
                                 else{
                                     TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
-                                    entry->emit_store("%base"); //TODO: change base pointer
+                                    entry->emit_store(base, baseList); //TODO: change base pointer
                                     $$ = new Statement();
                                 }
                                 delete $1;     
@@ -252,7 +278,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                             }
                                             else{
                                                 TableEntry* entry = scopeHandler.findSymbol(static_cast<Id*>($2)->name);
-                                                entry->emit_store("%base"); //TODO: change base pointer
+                                                entry->emit_store(base, baseList); //TODO: change base pointer
                                                 $$ = new Statement();
                                             }
                                             delete $1;
@@ -275,12 +301,12 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         }
 
                                         entry->var = static_cast<Type*>($3)->type == "BOOL" ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
-                                        entry->emit_store("%base"); //TODO: change base pointer
+                                        entry->emit_store(base, baseList); //TODO: change base pointer
                                         $$ = new Statement();
                                         delete $3;
                                     }
                 | Call SC {
-
+                            $$ = new Statement();
                             delete $1;
                           }
                 | RETURN SC {
@@ -307,6 +333,17 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     }
                                     $$ = new Statement();
                                     static_cast<Statement*>($$)->isRet = true;
+                                    if(static_cast<Exp*>($2)->type == "BOOL"){
+                                        std::string var = static_cast<BoolExp*>($2)->evaluate();
+                                        std::string str = "ret " + var;
+                                        CodeBuffer::instance().emit(str);
+                                    }
+                                    else{
+                                        std::string var = static_cast<Exp*>($2)->var;
+                                        std::string str = "ret " + var;
+                                        CodeBuffer::instance().emit(str);
+                                    }
+
                                     delete $2;
                                 }
                 | IF LPAREN M_Bool_Exp RPAREN M M_New_Scope Statement{ 
@@ -411,15 +448,40 @@ Call:       ID LPAREN ExpList RPAREN{
                                         } 
                                         int i = 0;
                                         for(auto& exp : static_cast<ExpList*>($3)->expressions){
-                                            if((exp.type != params[i]) and ((exp.type != "BYTE") 
+                                            if((exp->type != params[i]) and ((exp->type != "BYTE") 
                                                 or (params[i] != "INT"))){
                                                 output::errorPrototypeMismatch(yylineno, entry->name, params);
                                                 exit(0);
                                             }
                                             ++i;
                                         }
-                                        $$ = new Call(getFuncReturn(entry));
+                                        std::vector<std::string> varlist;
+                                        for (auto& exp: static_cast<ExpList*>($3)->expressions){
+                                            if(exp->type == "BOOL")
+                                                varlist.push_back("i1 " + dynamic_cast<BoolExp*>(exp)->evaluate());
+                                            else if(exp->type == "STRING"){
+                                                varlist.push_back(dynamic_cast<StringExp*>(exp)->var);
+                                            }    
+                                            else
+                                                varlist.push_back("i32 " + exp->var);
+                                        }
+                                        std::string new_var = "";
+                                        std::string str = "";
+                                        if(getFuncReturn(entry) != "VOID"){
+                                            new_var = CodeBuffer::instance().freshVar();
+                                            str = new_var + " = call @" + static_cast<Id*>($1)->name + "(" ;
+                                        }
+                                        else
+                                            str = "call @" + static_cast<Id*>($1)->name + "(" ;
+                                        for (auto& var: varlist){
+                                            str += var + ", ";
+                                        }
+                                        str.pop_back();
+                                        str.pop_back();
+                                        str += ")";
+                                        CodeBuffer::instance().emit(str);
 
+                                        $$ = new Call(getFuncReturn(entry), new_var);
                                         delete $3;                                    
                                     }
             | ID LPAREN RPAREN  {
@@ -437,20 +499,40 @@ Call:       ID LPAREN ExpList RPAREN{
                                         output::errorPrototypeMismatch(yylineno, entry->name, params);
                                         exit(0);
                                     }
-                                    $$ = new Call(getFuncReturn(entry));   
+                                    std::string new_var = "";
+                                    std::string str = "";
+                                    if(getFuncReturn(entry) != "VOID"){
+                                        new_var = CodeBuffer::instance().freshVar();
+                                        str = new_var + " = call @" + static_cast<Id*>($1)->name + "()" ;
+                                    }
+                                    else
+                                        str = "call @" + static_cast<Id*>($1)->name + "()" ;
+                                    CodeBuffer::instance().emit(str);
+                                    
+                                    $$ = new Call(getFuncReturn(entry), new_var);   
                                 }
 ;   
 
 ExpList:    Exp {
-                    ExpList* expList = new ExpList(std::vector<Exp>());
-                    expList->expressions.push_back(Exp(static_cast<Exp*>($1)->type));
+                    ExpList* expList = new ExpList(std::vector<Exp*>());
+                    if (static_cast<Exp*>($1)->type == "BOOL")
+                        expList->expressions.push_back(new BoolExp(static_cast<BoolExp*>($1)->var));
+                    else if (static_cast<Exp*>($1)->type == "STRING")
+                        expList->expressions.push_back(new StringExp(static_cast<StringExp*>($1)->value, static_cast<Exp*>($1)->var));
+                    else
+                        expList->expressions.push_back(new Exp(static_cast<Exp*>($1)->type,static_cast<Exp*>($1)->var));
                     $$ = expList;
 
                     delete $1; 
                 }
             | Exp COMMA ExpList {
                                     ExpList* expList = new ExpList(static_cast<ExpList*>($3)->expressions); //potential bug
-                                    expList->expressions.insert(expList->expressions.begin(), Exp(static_cast<Exp*>($1)->type));  
+                                    if (static_cast<Exp*>($1)->type == "BOOL")
+                                        expList->expressions.insert(expList->expressions.begin(), new BoolExp(static_cast<BoolExp*>($1)->var));
+                                    else if (static_cast<Exp*>($1)->type == "STRING")
+                                        expList->expressions.insert(expList->expressions.begin(), new StringExp(static_cast<StringExp*>($1)->value, static_cast<Exp*>($1)->var));
+                                    else
+                                        expList->expressions.insert(expList->expressions.begin(), new Exp(static_cast<Exp*>($1)->type,static_cast<Exp*>($1)->var));  
                                     $$ = expList;
 
                                     delete $1;
@@ -595,7 +677,7 @@ Exp:    LPAREN Exp RPAREN   {
         | ID{  
                 TableEntry* entry =scopeHandler.findSymbol(static_cast<Id*>($1)->name);
                 if(entry){
-                    std::string var = entry->emit_load("%base"); //TODO: change base pointer
+                    std::string var = entry->emit_load(base, baseList); //TODO: change base pointer
                     if(entry->type.find("->") == -1){
                         if(entry->type == "BOOL"){
                             $$ = new BoolExp(var);
@@ -614,8 +696,8 @@ Exp:    LPAREN Exp RPAREN   {
                     exit(0);
                 }
             }
-        | Call { 
-                    $$ = new Exp(static_cast<Call*>($1)->type);
+        | Call {  
+                    $$ = new Exp(static_cast<Call*>($1)->type, static_cast<Call*>($1)->var);
 
                     delete $1;
                }
@@ -631,7 +713,9 @@ Exp:    LPAREN Exp RPAREN   {
                     }
                 }
         | STRING{ 
-                    $$ = new StringExp(static_cast<String*>($1)->value, CodeBuffer::instance().freshVar()); 
+                    std::string var = CodeBuffer::instance().freshVar();
+                    var = "@." + var.substr(1);
+                    $$ = new StringExp(static_cast<String*>($1)->value, var); 
                     static_cast<StringExp*>($$)->emitGlobalString();
                 }   
 

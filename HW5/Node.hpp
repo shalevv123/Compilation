@@ -49,9 +49,7 @@ struct BoolExp: public Exp{
     std::string midLabel;
 
     explicit BoolExp(const std::string& var = "");
-    BoolExp(const std::vector<std::pair<int,BranchLabelIndex>>& trueList, 
-            const std::vector<std::pair<int,BranchLabelIndex>>& falseList, const std::string& var = "");
-    
+
     std::string emit();
     std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2) override ;
     std::string notOp(const Exp* exp);
@@ -67,15 +65,17 @@ struct StringExp: public Exp{
 };
 
 struct ExpList : public Node {
-    std::vector<Exp> expressions;
+    std::vector<Exp*> expressions;
 
-    explicit ExpList(const std::vector<Exp>& expressions);
+    explicit ExpList(const std::vector<Exp*>& expressions);
+    ~ExpList();
 };
 
 struct Call : public Node {
     std::string type;
+    std::string var;
     
-    explicit Call(const std::string& type);
+    explicit Call(const std::string& type, const std::string& var = "");
 };
 
 struct RetType : public Node {

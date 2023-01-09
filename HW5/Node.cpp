@@ -107,10 +107,6 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
 BoolExp::BoolExp(const std::string& var):
         Exp("BOOL", var){};
 
-BoolExp::BoolExp(const std::vector<std::pair<int,BranchLabelIndex>>& trueList, 
-            const std::vector<std::pair<int,BranchLabelIndex>>& falseList, const std::string& var):
-        Exp("BOOL", var), trueList(trueList), falseList(falseList){};
-
 std::string BoolExp::emit(){
     string str = "br i1 " + var + ", label @, label @";
     int br = CodeBuffer::instance().emit(str);
@@ -169,7 +165,7 @@ std::string  BoolExp::evaluate() const{
 
 //StringExp
 StringExp::StringExp(const std::string& value, std::string var):
-        Exp("STRING", "@." + var.substr(1)), value(value){};
+        Exp("STRING", var), value(value){};
 
 std::string StringExp::emitGlobalString() const
 {
@@ -181,12 +177,16 @@ std::string StringExp::emitGlobalString() const
     return var;
 };
 //ExpList
-ExpList::ExpList(const std::vector<Exp> &expressions):
+ExpList::ExpList(const std::vector<Exp*>& expressions):
         expressions(expressions){};
 
+ExpList::~ExpList() noexcept {
+    for(auto& exp : expressions)
+        delete exp;
+}
 //Call
-Call::Call(const std::string &type):
-        type(type){};
+Call::Call(const std::string &type, const std::string& var):
+        type(type), var(var){};
 
 //RetType
 RetType::RetType(const std::string &name):

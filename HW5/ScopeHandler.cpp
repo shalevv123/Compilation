@@ -67,3 +67,7 @@ std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, 
     }
     return nullptr;
 }
+
+int ScopeHandler::localVars() {
+    return tableStack.back().localVars();
+}

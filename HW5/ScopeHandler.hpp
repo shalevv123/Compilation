@@ -15,7 +15,7 @@ public:
     // TODO: add function support
     bool addSymbol(const std::string& name, std::string type, const std::string var="");
     std::shared_ptr<std::string> addFunction(const std::string& name , const std::string& type,const std::vector<std::string>& argnames,const std::vector<std::string>& argtypes);
-
+    int localVars();
 private:
 std::vector<int> offsetStack = std::vector<int>();
 std::vector<Table> tableStack = std::vector<Table>();

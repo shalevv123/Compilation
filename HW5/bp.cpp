@@ -45,6 +45,14 @@ void CodeBuffer::bpatch(const vector<pair<int,BranchLabelIndex>>& address_list, 
     }
 }
 
+void CodeBuffer::bpatchSize(const vector<pair<int,BranchLabelIndex>>& address_list, const std::string &label){
+    for(vector<pair<int,BranchLabelIndex>>::const_iterator i = address_list.begin(); i != address_list.end(); i++){
+        int address = (*i).first;
+        BranchLabelIndex labelIndex = (*i).second;
+        replace(buffer[address], "@", label, labelIndex);
+    }
+}
+
 void CodeBuffer::printCodeBuffer(){
 	for (std::vector<string>::const_iterator it = buffer.begin(); it != buffer.end(); ++it) 
 	{
