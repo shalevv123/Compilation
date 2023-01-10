@@ -1,4 +1,5 @@
 #include "ScopeHandler.hpp"
+#include "bp.hpp"
 #include <memory>
 #include "hw3_output.hpp"
 #include <string>
@@ -10,10 +11,10 @@ ScopeHandler::ScopeHandler()
 {
     offsetStack.push_back(0);
     tableStack.emplace_back();
-    addFunction("print","VOID", vector<string>{""},  vector<string>{"STRING"});
+    addFunction("print","VOID", vector<string>{""},  vector<string>{"STRING"}, vector<string>{CodeBuffer::instance().freshVar()});
     offsetStack.pop_back();
     tableStack.pop_back();
-    addFunction("printi", "VOID", vector<string>{""}, vector<string>{"INT"});
+    addFunction("printi", "VOID", vector<string>{""}, vector<string>{"INT"}, vector<string>{CodeBuffer::instance().freshVar()});
     offsetStack.pop_back();
     tableStack.pop_back();
 }
@@ -51,7 +52,10 @@ bool ScopeHandler::addSymbol(const std::string& name, std::string type,const std
     return true;
 }
 
-std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, const std::string& returnType, const std::vector<std::string>& argnames, const std::vector<std::string>& argtypes)
+std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, const std::string& returnType,
+                                                       const std::vector<std::string>& argnames,
+                                                       const std::vector<std::string>& argtypes,
+                                                       const std::vector<std::string>& varList)
 {
     if (findSymbol(name))
         return make_shared<std::string>(name);
@@ -62,7 +66,7 @@ std::shared_ptr<std::string> ScopeHandler::addFunction(const std::string& name, 
     {
         if(findSymbol(argnames[it]))
             return make_shared<std::string>(argnames[it]);
-        tableStack.back().addEntry(argnames[it], argtypes[it], negCounter);
+        tableStack.back().addEntry(argnames[it], argtypes[it], negCounter, varList[it]);
         negCounter--;
     }
     return nullptr;

@@ -177,13 +177,9 @@ std::string StringExp::emitGlobalString() const
     return var;
 };
 //ExpList
-ExpList::ExpList(const std::vector<Exp*>& expressions):
+ExpList::ExpList(const std::vector<std::shared_ptr<Exp>>& expressions):
         expressions(expressions){};
 
-ExpList::~ExpList() noexcept {
-    for(auto& exp : expressions)
-        delete exp;
-}
 //Call
 Call::Call(const std::string &type, const std::string& var):
         type(type), var(var){};

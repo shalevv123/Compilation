@@ -14,7 +14,9 @@ public:
     TableEntry* findSymbol(const std::string& name);
     // TODO: add function support
     bool addSymbol(const std::string& name, std::string type, const std::string var="");
-    std::shared_ptr<std::string> addFunction(const std::string& name , const std::string& type,const std::vector<std::string>& argnames,const std::vector<std::string>& argtypes);
+    std::shared_ptr<std::string> addFunction(const std::string& name , const std::string& type,const std::vector<std::string>& argnames,
+                                             const std::vector<std::string>& argtypes,
+                                             const std::vector<std::string>& varList);
     int localVars();
 private:
 std::vector<int> offsetStack = std::vector<int>();

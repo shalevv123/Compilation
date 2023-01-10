@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "bp.hpp"
+#include <memory>
 struct Node{
     virtual ~Node() = default;
 };
@@ -65,10 +66,9 @@ struct StringExp: public Exp{
 };
 
 struct ExpList : public Node {
-    std::vector<Exp*> expressions;
+    std::vector<std::shared_ptr<Exp>> expressions;
 
-    explicit ExpList(const std::vector<Exp*>& expressions);
-    ~ExpList();
+    explicit ExpList(const std::vector<std::shared_ptr<Exp>>& expressions);
 };
 
 struct Call : public Node {
