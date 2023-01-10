@@ -11,10 +11,10 @@ ScopeHandler::ScopeHandler()
 {
     offsetStack.push_back(0);
     tableStack.emplace_back();
-    addFunction("print","VOID", vector<string>{""},  vector<string>{"STRING"}, vector<string>{CodeBuffer::instance().freshVar()});
+    addFunction("print","VOID", vector<string>{""},  vector<string>{"STRING"}, vector<string>{""});
     offsetStack.pop_back();
     tableStack.pop_back();
-    addFunction("printi", "VOID", vector<string>{""}, vector<string>{"INT"}, vector<string>{CodeBuffer::instance().freshVar()});
+    addFunction("printi", "VOID", vector<string>{""}, vector<string>{"INT"}, vector<string>{""});
     offsetStack.pop_back();
     tableStack.pop_back();
 }
