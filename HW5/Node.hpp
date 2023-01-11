@@ -37,9 +37,11 @@ struct Id : public Node {
 struct Exp : public Node {
     std::string type;
     std::string var;
+    std::vector<std::pair<int,BranchLabelIndex>> bp;
+    std::string label;
     Exp(const std::string& type, const std::string& var = "");
     virtual std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2);
-
+    void selfBPatch() const;
     virtual ~Exp() = default;
 };
 
@@ -61,7 +63,7 @@ struct BoolExp: public Exp{
 struct StringExp: public Exp{
     std::string value;
 
-    explicit StringExp(const std::string& value, std::string var);
+    explicit StringExp(const std::string& value = "", std::string var = "");
     std::string emitGlobalString() const;
 };
 
@@ -74,8 +76,11 @@ struct ExpList : public Node {
 struct Call : public Node {
     std::string type;
     std::string var;
-    
+    std::vector<std::pair<int,BranchLabelIndex>> bp;
+    std::string label;
+
     explicit Call(const std::string& type, const std::string& var = "");
+    void selfBPatch() const;
 };
 
 struct RetType : public Node {

@@ -1,11 +1,13 @@
-CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
- E:\technion\compilation\HW5\ScopeHandler.cpp \
- E:\technion\compilation\HW5\ScopeHandler.hpp \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/vector \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h \
+CMakeFiles/hw5.dir/Node.cpp.obj: E:\technion\compilation\HW5\Node.cpp \
+ E:\technion\compilation\HW5\Node.hpp \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/string \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/c++config.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/os_defines.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/cpu_defines.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stringfwd.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/memoryfwd.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/char_traits.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_algobase.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/functexcept.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/exception_defines.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/cpp_type_traits.h \
@@ -22,16 +24,9 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/ptr_traits.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/debug/debug.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/predefined_ops.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/allocator.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/c++allocator.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/new_allocator.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/new \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/exception \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/exception.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/exception_ptr.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/cxxabi_init_exception.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/stddef.h \
- E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/stddef.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/postypes.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cwchar \
+ E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/wchar.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/crtdefs.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/_mingw.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/_mingw_mac.h \
@@ -39,28 +34,6 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/vadefs.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/sdks/_mingw_directx.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/sdks/_mingw_ddk.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/typeinfo \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/hash_bytes.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/nested_exception.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/memoryfwd.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_construct.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/alloc_traits.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/alloc_traits.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_uninitialized.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/utility \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_relops.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/initializer_list \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_vector.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_bvector.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/functional_hash.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/range_access.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/vector.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/string \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stringfwd.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/char_traits.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/postypes.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cwchar \
- E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/wchar.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/_mingw_print_push.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/_mingw_off_t.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/_mingw_stat64.h \
@@ -70,6 +43,19 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cstdint \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/stdint.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/stdint.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/stddef.h \
+ E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/stddef.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/allocator.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/c++allocator.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/new_allocator.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/new \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/exception \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/exception.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/exception_ptr.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/cxxabi_init_exception.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/typeinfo \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/hash_bytes.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/nested_exception.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/localefwd.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/c++locale.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/clocale \
@@ -83,6 +69,8 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/cxxabi_forced.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_function.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/backward/binders.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/range_access.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/initializer_list \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/basic_string.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/atomicity.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/gthr.h \
@@ -102,8 +90,11 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/pthread_compat.h \
  E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/pthread_unistd.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/atomic_word.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/alloc_traits.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/alloc_traits.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/string_view \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/limits \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/functional_hash.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/string_view.tcc \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ext/string_conversions.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cstdlib \
@@ -115,7 +106,15 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cstdio \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cerrno \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/basic_string.tcc \
- E:\technion\compilation\HW5\Table.hpp \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/vector \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_construct.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_uninitialized.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/utility \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_relops.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_vector.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_bvector.h \
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/vector.tcc \
+ E:\technion\compilation\HW5\bp.hpp \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/memory \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_tempbuf.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/stl_raw_storage_iter.h \
@@ -134,28 +133,4 @@ CMakeFiles/hw5.dir/ScopeHandler.cpp.obj: \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/shared_ptr_atomic.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/atomic_base.h \
  E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/atomic_lockfree_defines.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/backward/auto_ptr.h \
- E:\technion\compilation\HW5\bp.hpp \
- E:\technion\compilation\HW5\hw3_output.hpp \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/iostream \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ostream \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/ios \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/ios_base.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/locale_classes.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/locale_classes.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/system_error \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/error_constants.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/streambuf \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/streambuf.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/basic_ios.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/locale_facets.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/cwctype \
- E:/programing/compiler/mingw/mingw32/i686-w64-mingw32/include/wctype.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/ctype_base.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/streambuf_iterator.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/i686-w64-mingw32/bits/ctype_inline.h \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/locale_facets.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/basic_ios.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/ostream.tcc \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/istream \
- E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/bits/istream.tcc
+ E:/programing/compiler/mingw/mingw32/lib/gcc/i686-w64-mingw32/8.1.0/include/c++/backward/auto_ptr.h

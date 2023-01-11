@@ -92,8 +92,8 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
     else if(op == ">="){
         str = var + " = icmp sge i32 " + exp1->var + ", " + exp2->var;
     }
-
-    CodeBuffer::instance().emit(str);
+    if (!op.empty())
+        CodeBuffer::instance().emit(str);
     if(type == "BYTE"){
         string mid_var = var;
         var = CodeBuffer::instance().freshVar();
@@ -101,6 +101,10 @@ std::string Exp::emitOp(const Exp *exp1, const std::string &op, const Exp *exp2)
         CodeBuffer::instance().emit(str);
     }
     return var;
+}
+
+void Exp::selfBPatch() const {
+    CodeBuffer::instance().bpatch(bp, label);
 }
 
 //BoolExp
@@ -117,12 +121,12 @@ std::string BoolExp::emit(){
 
 std::string BoolExp::emitOp(const Exp* exp1, const std::string& op,const Exp* exp2){
     if(op == "and"){
-        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->trueList, midLabel);
+        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->trueList, dynamic_cast<const BoolExp*>(exp2)->label);
         trueList = dynamic_cast<const BoolExp*>(exp2)->trueList;
         falseList = CodeBuffer::merge(dynamic_cast<const BoolExp*>(exp1)->falseList, dynamic_cast<const BoolExp*>(exp2)->falseList);
     }
     else if (op == "or"){
-        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->falseList, midLabel);
+        CodeBuffer::instance().bpatch(dynamic_cast<const BoolExp*>(exp1)->falseList, dynamic_cast<const BoolExp*>(exp2)->label);
         falseList = dynamic_cast<const BoolExp*>(exp2)->falseList;
         trueList = CodeBuffer::merge(dynamic_cast<const BoolExp*>(exp1)->trueList, dynamic_cast<const BoolExp*>(exp2)->trueList);
     }
@@ -140,7 +144,6 @@ std::string BoolExp::notOp(const Exp *exp) {
 }
 std::string  BoolExp::evaluate() const{
     string str;
-
     string true_evaluation = CodeBuffer::instance().genLabel();
     str = "br label @";
     int true_bp = CodeBuffer::instance().emit(str);
@@ -184,6 +187,9 @@ ExpList::ExpList(const std::vector<std::shared_ptr<Exp>>& expressions):
 Call::Call(const std::string &type, const std::string& var):
         type(type), var(var){};
 
+void Call::selfBPatch() const {
+    CodeBuffer::instance().bpatch(bp, label);
+}
 //RetType
 RetType::RetType(const std::string &name):
         name(name){};
