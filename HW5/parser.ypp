@@ -313,7 +313,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                         delete $3;
                                     }
                 | Call SC {
-                            static_cast<Call*>($1)->selfBPatch();
+                            static_cast<CallExp*>($1)->selfBPatch();
                             $$ = new Statement();
                             delete $1;
                           }
@@ -499,10 +499,8 @@ Call:       ID LPAREN ExpList RPAREN{
                                         str.pop_back();
                                         str += ")";
 
-                                        $$ = new Call(getFuncReturn(entry), new_var);
-                                        std::string bpstr = "br label @";
-                                        static_cast<Call*>($$)->bp.emplace_back(CodeBuffer::instance().emit(bpstr), FIRST);
-                                        static_cast<Call*>($$)->label = CodeBuffer::instance().genLabel();
+                                        $$ = new CallExp(getFuncReturn(entry), new_var);
+                                        static_cast<Exp*>($$)->anounce();
 
                                         CodeBuffer::instance().emit(str);
                                         delete $1;
@@ -534,10 +532,8 @@ Call:       ID LPAREN ExpList RPAREN{
                                     else
                                         str = "call @" + static_cast<Id*>($1)->name + "()" ;
 
-                                    $$ = new Call(getFuncReturn(entry), new_var);  
-                                    std::string bpstr = "br label @";
-                                    static_cast<Call*>($$)->bp.emplace_back(CodeBuffer::instance().emit(bpstr), FIRST);
-                                    static_cast<Call*>($$)->label = CodeBuffer::instance().genLabel();
+                                    $$ = new CallExp(getFuncReturn(entry), new_var);  
+                                    static_cast<Exp*>($$)->anounce();
 
                                     CodeBuffer::instance().emit(str);
                                     
@@ -603,8 +599,7 @@ M_Bool_Exp: Exp {
                     $$ = new BoolExp(static_cast<Exp*>($1)->var, static_cast<BoolExp*>($1)->fresh);
                     static_cast<BoolExp*>($$)->trueList = static_cast<BoolExp*>($1)->trueList;
                     static_cast<BoolExp*>($$)->falseList = static_cast<BoolExp*>($1)->falseList;
-                    static_cast<BoolExp*>($$)->bp = static_cast<BoolExp*>($1)->bp;
-                    static_cast<BoolExp*>($$)-> label = static_cast<BoolExp*>($1)->label;
+                    static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
                     delete $1;
                 }
 ;
@@ -620,8 +615,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 else
                                     $$ = new Exp(static_cast<Exp*>($2)->type, static_cast<Exp*>($2)->var);
 
-                                static_cast<Exp*>($$)->bp = static_cast<Exp*>($2)->bp;
-                                static_cast<Exp*>($$)->label = static_cast<Exp*>($2)->label;
+                                static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($2));
                                 delete $2;
                             }
                     
@@ -646,9 +640,7 @@ Exp:    LPAREN Exp RPAREN   {
                                                     output::errorMismatch(yylineno);
                                                     exit(0);
                                                 }
-                                                std::string str = "br label @";
-                                                static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                                static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                                static_cast<Exp*>($$)->anounce();
                                                 
                                                 CodeBuffer::instance().bpatch(static_cast<Exp*>($1)->bp, static_cast<BoolExp*>($4)->label);
 
@@ -663,7 +655,7 @@ Exp:    LPAREN Exp RPAREN   {
                                                 
                                                 if(static_cast<Exp*>($1)->type != "BOOL"){
                                                     std::string var = CodeBuffer::instance().freshVar();
-                                                    str = var + " = phi i32 [ " + static_cast<Exp*>($1)->var + ", %" + static_cast<Exp*>($1)->label + " ], [ " +
+                                                    std::string str = var + " = phi i32 [ " + static_cast<Exp*>($1)->var + ", %" + static_cast<Exp*>($1)->label + " ], [ " +
                                                            static_cast<Exp*>($7)->var + ", %" + static_cast<Exp*>($7)->label + " ]";
                                                     CodeBuffer::instance().emit(str);
                                                     static_cast<Exp*>($$)->var = var;
@@ -681,9 +673,7 @@ Exp:    LPAREN Exp RPAREN   {
                                     if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
                                     {    
                                         $$ = new Exp("INT", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<PlusMinus*>($2)->op, static_cast<Exp*>($3));
                                     }
                                     else{
@@ -695,17 +685,13 @@ Exp:    LPAREN Exp RPAREN   {
                                     if(static_cast<Exp*>($3)->type == "INT")
                                     {    
                                         $$ = new Exp("INT", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<PlusMinus*>($2)->op, static_cast<Exp*>($3));
                                     }
                                     else if(static_cast<Exp*>($3)->type == "BYTE")
                                     {    
                                         $$ = new Exp("BYTE", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<PlusMinus*>($2)->op, static_cast<Exp*>($3));
                                     }                                    
                                     else{
@@ -729,9 +715,7 @@ Exp:    LPAREN Exp RPAREN   {
                                     if(static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE")
                                     {    
                                         $$ = new Exp("INT", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<MulDiv*>($2)->op, static_cast<Exp*>($3));
                                     }
                                     else{
@@ -743,17 +727,13 @@ Exp:    LPAREN Exp RPAREN   {
                                     if(static_cast<Exp*>($3)->type == "INT")
                                     {    
                                         $$ = new Exp("INT", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<MulDiv*>($2)->op, static_cast<Exp*>($3));
                                     }
                                     else if(static_cast<Exp*>($3)->type == "BYTE")
                                     {    
                                         $$ = new Exp("BYTE", CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<Exp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<MulDiv*>($2)->op, static_cast<Exp*>($3));
                                     }
                                     else{
@@ -777,9 +757,6 @@ Exp:    LPAREN Exp RPAREN   {
                 if(entry){
                     if(entry->type.find("->") == -1){
                         std::string var;
-                        std::string str = "br label @";
-                        std::pair<int,BranchLabelIndex> bp = {CodeBuffer::instance().emit(str), FIRST};
-                        std::string label= CodeBuffer::instance().genLabel();
                         if (entry->offset >= 0)
                             var = entry->emit_load(base, baseList);
                         else
@@ -788,13 +765,11 @@ Exp:    LPAREN Exp RPAREN   {
                         if(entry->type == "BOOL"){
                             $$ = new BoolExp(var);
                             static_cast<BoolExp*>($$)->emit();
-                            static_cast<BoolExp*>($$)->bp.emplace_back(bp);
-                            static_cast<BoolExp*>($$)->label = label;
+                            static_cast<Exp*>($$)->anounce();
                         }
                         else{
                             $$ = new Exp(entry->type, var);
-                            static_cast<Exp*>($$)->bp.emplace_back(bp);
-                            static_cast<Exp*>($$)->label = label;
+                            static_cast<Exp*>($$)->anounce();
                         }
                     }
                     else{
@@ -811,21 +786,18 @@ Exp:    LPAREN Exp RPAREN   {
             }
         | Call {    
                     
-                    if(static_cast<Call*>($1)->type == "BOOL")
-                        $$ = new BoolExp(static_cast<Call*>($1)->var, false);
+                    if(static_cast<CallExp*>($1)->type == "BOOL")
+                        $$ = new BoolExp(static_cast<CallExp*>($1)->var, false);
                     else
-                        $$ = new Exp(static_cast<Call*>($1)->type, static_cast<Call*>($1)->var);
+                        $$ = new Exp(static_cast<CallExp*>($1)->type, static_cast<CallExp*>($1)->var);
                     
 
-                    static_cast<Exp*>($$)->bp = static_cast<Call*>($1)->bp;
-                    static_cast<Exp*>($$)->label = static_cast<Call*>($1)->label;
+                    static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
                     delete $1;
                }
         | NUM   { 
                     $$ = new Exp("INT", std::to_string((static_cast<Num*>($1))->value));
-                    std::string str = "br label @";
-                    static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                    static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                    static_cast<Exp*>($$)->anounce();
                     delete $1;
                 }
         | NUM B {
@@ -836,9 +808,7 @@ Exp:    LPAREN Exp RPAREN   {
                         exit(0);
                     }
 
-                    std::string str = "br label @";
-                    static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                    static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                    static_cast<Exp*>($$)->anounce();
                     delete $1;
                 }
         | STRING{ 
@@ -847,24 +817,18 @@ Exp:    LPAREN Exp RPAREN   {
                     $$ = new StringExp(static_cast<String*>($1)->value, var); 
                     static_cast<StringExp*>($$)->emitGlobalString();
 
-                    std::string str = "br label @";
-                    static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                    static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                    static_cast<Exp*>($$)->anounce();
                     delete $1;
                 }   
 
         | TRUE  { 
                     $$ = new BoolExp("true");
-                    std::string str = "br label @";
-                    static_cast<BoolExp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                    static_cast<BoolExp*>($$)->label = CodeBuffer::instance().genLabel();
+                    static_cast<Exp*>($$)->anounce();
                     static_cast<BoolExp*>($$)->emit(); 
                 }
         | FALSE { 
                     $$ = new BoolExp("false");
-                    std::string str = "br label @";
-                    static_cast<BoolExp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                    static_cast<BoolExp*>($$)->label = CodeBuffer::instance().genLabel();
+                    static_cast<Exp*>($$)->anounce();
                     static_cast<BoolExp*>($$)->emit();  
                 }
         | NOT Exp   { 
@@ -879,8 +843,7 @@ Exp:    LPAREN Exp RPAREN   {
                             exit(0);
                         }
                         
-                        static_cast<Exp*>($$)->bp = static_cast<Exp*>($2)->bp;
-                        static_cast<Exp*>($$)->label = static_cast<Exp*>($2)->label;
+                        static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($2));
                         delete $2; 
                     }
         | Exp AND Exp   {
@@ -893,8 +856,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 output::errorMismatch(yylineno);
                                 exit(0);
                             }
-                            static_cast<Exp*>($$)->bp = static_cast<Exp*>($1)->bp;
-                            static_cast<Exp*>($$)->label = static_cast<Exp*>($1)->label;
+                            static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
 
                             static_cast<Exp*>($3)->selfBPatch();
                             delete $1;
@@ -910,8 +872,7 @@ Exp:    LPAREN Exp RPAREN   {
                             output::errorMismatch(yylineno);
                             exit(0);
                         }
-                        static_cast<Exp*>($$)->bp = static_cast<Exp*>($1)->bp;
-                        static_cast<Exp*>($$)->label = static_cast<Exp*>($1)->label;
+                        static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
 
                         static_cast<Exp*>($3)->selfBPatch();
                         delete $1;
@@ -922,9 +883,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
                                     {    
                                         $$ = new BoolExp(CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<BoolExp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<BoolExp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Relop*>($2)->op, static_cast<Exp*>($3));
                                     }
                             else{
@@ -943,9 +902,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 and (static_cast<Exp*>($3)->type == "INT" or static_cast<Exp*>($3)->type == "BYTE"))
                                     {    
                                         $$ = new BoolExp(CodeBuffer::instance().freshVar());
-                                        std::string str = "br label @";
-                                        static_cast<BoolExp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                        static_cast<BoolExp*>($$)->label = CodeBuffer::instance().genLabel();
+                                        static_cast<Exp*>($$)->anounce();
                                         static_cast<BoolExp*>($$)->emitOp(static_cast<Exp*>($1), static_cast<Equal*>($2)->op, static_cast<Exp*>($3));
                                     }
                             else{
@@ -962,21 +919,17 @@ Exp:    LPAREN Exp RPAREN   {
         | LPAREN Type RPAREN Exp{  
                                     if (static_cast<Type*>($2)->type == "INT" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE")){
                                         $$ = new Exp("INT",static_cast<Exp*>($4)->var);
-                                        static_cast<Exp*>($$)->bp = static_cast<Exp*>($4)->bp;
-                                        static_cast<Exp*>($$)->label = static_cast<Exp*>($4)->label;
+                                        static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($4));
                                     }
                                     else if (static_cast<Type*>($2)->type == "BYTE" and (static_cast<Exp*>($4)->type == "INT" or static_cast<Exp*>($4)->type == "BYTE")){
                                         $$ = new Exp("BYTE", static_cast<Exp*>($4)->var);
                                         if(static_cast<Exp*>($4)->type != "BYTE"){
-                                            std::string str = "br label @";
-                                            static_cast<Exp*>($$)->bp.emplace_back(CodeBuffer::instance().emit(str), FIRST);
-                                            static_cast<Exp*>($$)->label = CodeBuffer::instance().genLabel();
+                                            static_cast<Exp*>($$)->anounce();
                                             static_cast<Exp*>($$)->emitOp(nullptr, "", nullptr);
                                             static_cast<Exp*>($4)->selfBPatch();
                                         }
                                         else{
-                                            static_cast<Exp*>($$)->bp = static_cast<Exp*>($4)->bp;
-                                            static_cast<Exp*>($$)->label = static_cast<Exp*>($4)->label;
+                                            static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($4));
                                         }
                                     }
                                     else{

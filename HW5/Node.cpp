@@ -107,6 +107,17 @@ void Exp::selfBPatch() const {
     CodeBuffer::instance().bpatch(bp, label);
 }
 
+void Exp::anounce(){
+    std::string bpstr = "br label @";
+    bp.emplace_back(CodeBuffer::instance().emit(bpstr), FIRST);
+    label = CodeBuffer::instance().genLabel();
+}
+
+void Exp::forward_anouncement(const Exp* exp){
+    bp = exp->bp;
+    label = exp->label;
+}
+
 //BoolExp
 BoolExp::BoolExp(const std::string& var, bool fresh):
         Exp("BOOL", var), fresh(fresh){};
@@ -184,12 +195,8 @@ ExpList::ExpList(const std::vector<std::shared_ptr<Exp>>& expressions):
         expressions(expressions){};
 
 //Call
-Call::Call(const std::string &type, const std::string& var):
-        type(type), var(var){};
-
-void Call::selfBPatch() const {
-    CodeBuffer::instance().bpatch(bp, label);
-}
+CallExp::CallExp(const std::string &type, const std::string& var):
+        Exp(type, var){};
 //RetType
 RetType::RetType(const std::string &name):
         name(name){};

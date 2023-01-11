@@ -42,6 +42,8 @@ struct Exp : public Node {
     Exp(const std::string& type, const std::string& var = "");
     virtual std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2);
     void selfBPatch() const;
+    void anounce();
+    void forward_anouncement(const Exp* exp);
     virtual ~Exp() = default;
 };
 
@@ -73,14 +75,8 @@ struct ExpList : public Node {
     explicit ExpList(const std::vector<std::shared_ptr<Exp>>& expressions);
 };
 
-struct Call : public Node {
-    std::string type;
-    std::string var;
-    std::vector<std::pair<int,BranchLabelIndex>> bp;
-    std::string label;
-
-    explicit Call(const std::string& type, const std::string& var = "");
-    void selfBPatch() const;
+struct CallExp : public Exp {
+    CallExp(const std::string& type, const std::string& var = "");
 };
 
 struct RetType : public Node {
