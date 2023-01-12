@@ -757,6 +757,8 @@ Exp:    LPAREN Exp RPAREN   {
                 if(entry){
                     if(entry->type.find("->") == -1){
                         std::string var;
+                        Exp exp("DUMMY");
+                        exp.anounce();
                         if (entry->offset >= 0)
                             var = entry->emit_load(base, baseList);
                         else
@@ -765,11 +767,11 @@ Exp:    LPAREN Exp RPAREN   {
                         if(entry->type == "BOOL"){
                             $$ = new BoolExp(var);
                             static_cast<BoolExp*>($$)->emit();
-                            static_cast<Exp*>($$)->anounce();
+                            static_cast<Exp*>($$)->forward_anouncement(&exp);
                         }
                         else{
                             $$ = new Exp(entry->type, var);
-                            static_cast<Exp*>($$)->anounce();
+                            static_cast<Exp*>($$)->forward_anouncement(&exp);
                         }
                     }
                     else{
