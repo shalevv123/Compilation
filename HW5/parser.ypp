@@ -272,7 +272,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0);
                                             }
                                             if (!scopeHandler.addSymbol(static_cast<Id*>($2)->name,static_cast<Type*>($1)->type,
-                                                 (static_cast<Exp*>($4)->type == "BOOL" and static_cast<BoolExp*>($4)->fresh) ? static_cast<BoolExp*>($4)->evaluate() :  static_cast<Exp*>($4)->var)){
+                                                 (static_cast<Exp*>($4)->type == "BOOL") ? static_cast<BoolExp*>($4)->evaluate() :  static_cast<Exp*>($4)->var)){
                                                 output::errorDef(yylineno, static_cast<Id*>($2)->name);
                                                 exit(0); 
                                             }
@@ -304,7 +304,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                                 exit(0); 
                                         }
 
-                                        entry->var = (static_cast<Exp*>($3)->type == "BOOL" and static_cast<BoolExp*>($3)->fresh) ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
+                                        entry->var = (static_cast<Exp*>($3)->type == "BOOL") ? static_cast<BoolExp*>($3)->evaluate() :  static_cast<Exp*>($3)->var;
                                         entry->emit_store(base, baseList); //TODO: change base pointer
                                         $$ = new Statement();
                                         
@@ -341,7 +341,7 @@ Statement:      LBRACE M_New_Scope Statements RBRACE{
                                     }
                                     $$ = new Statement();
                                     static_cast<Statement*>($$)->isRet = true;
-                                    if(static_cast<Exp*>($2)->type == "BOOL" and static_cast<BoolExp*>($2)->fresh){
+                                    if(static_cast<Exp*>($2)->type == "BOOL"){
                                         std::string var = static_cast<BoolExp*>($2)->evaluate();
                                         std::string str = "ret i1 " + var;
                                         CodeBuffer::instance().emit(str);
@@ -474,10 +474,7 @@ Call:       ID LPAREN ExpList RPAREN{
                                         std::vector<std::string> varlist;
                                         for (auto& exp: static_cast<ExpList*>($3)->expressions){
                                             if(exp->type == "BOOL")
-                                                if (std::dynamic_pointer_cast<BoolExp>(exp)->fresh)
-                                                    varlist.push_back("i1 " + std::dynamic_pointer_cast<BoolExp>(exp)->evaluate());
-                                                else
-                                                    varlist.push_back("i1 " + std::dynamic_pointer_cast<BoolExp>(exp)->var);
+                                                varlist.push_back("i1 " + std::dynamic_pointer_cast<BoolExp>(exp)->evaluate());
                                             else if(exp->type == "STRING"){
                                                 varlist.push_back(std::dynamic_pointer_cast<StringExp>(exp)->var);
                                             }    
@@ -546,7 +543,7 @@ Call:       ID LPAREN ExpList RPAREN{
 ExpList:    Exp {
                     ExpList* expList = new ExpList(std::vector<std::shared_ptr<Exp>>());
                     if (static_cast<Exp*>($1)->type == "BOOL"){
-                        BoolExp* exp = new BoolExp(static_cast<BoolExp*>($1)->var, static_cast<BoolExp*>($1)->fresh);
+                        BoolExp* exp = new BoolExp(static_cast<BoolExp*>($1)->var);
                         exp->trueList = static_cast<BoolExp*>($1)->trueList;
                         exp->falseList = static_cast<BoolExp*>($1)->falseList;
                         expList->expressions.push_back(std::shared_ptr<Exp> (exp));
@@ -563,7 +560,7 @@ ExpList:    Exp {
             | Exp COMMA ExpList {
                                     ExpList* expList = new ExpList(static_cast<ExpList*>($3)->expressions); //potential bug
                                     if (static_cast<Exp*>($1)->type == "BOOL"){
-                                        BoolExp* exp = new BoolExp(static_cast<BoolExp*>($1)->var, static_cast<BoolExp*>($1)->fresh);
+                                        BoolExp* exp = new BoolExp(static_cast<BoolExp*>($1)->var);
                                         exp->trueList = static_cast<BoolExp*>($1)->trueList;
                                         exp->falseList = static_cast<BoolExp*>($1)->falseList;
                                         expList->expressions.insert(expList->expressions.begin(), std::shared_ptr<Exp> (exp));
@@ -596,7 +593,7 @@ M_Bool_Exp: Exp {
                         output::errorMismatch(yylineno);
                         exit(0);
                     }
-                    $$ = new BoolExp(static_cast<Exp*>($1)->var, static_cast<BoolExp*>($1)->fresh);
+                    $$ = new BoolExp(static_cast<Exp*>($1)->var);
                     static_cast<BoolExp*>($$)->trueList = static_cast<BoolExp*>($1)->trueList;
                     static_cast<BoolExp*>($$)->falseList = static_cast<BoolExp*>($1)->falseList;
                     static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
@@ -606,7 +603,7 @@ M_Bool_Exp: Exp {
 
 Exp:    LPAREN Exp RPAREN   { 
                                 if (static_cast<Exp*>($2)->type == "BOOL"){
-                                    BoolExp* exp = new BoolExp(static_cast<BoolExp*>($2)->var, static_cast<BoolExp*>($2)->fresh);
+                                    BoolExp* exp = new BoolExp(static_cast<BoolExp*>($2)->var);
                                     exp->trueList = static_cast<BoolExp*>($2)->trueList;
                                     exp->falseList = static_cast<BoolExp*>($2)->falseList;
                                 }
@@ -788,8 +785,11 @@ Exp:    LPAREN Exp RPAREN   {
             }
         | Call {    
                     
-                    if(static_cast<CallExp*>($1)->type == "BOOL")
-                        $$ = new BoolExp(static_cast<CallExp*>($1)->var, false);
+                    if(static_cast<CallExp*>($1)->type == "BOOL"){
+                        $$ = new BoolExp(static_cast<CallExp*>($1)->var);
+                        static_cast<BoolExp*>($$)->emit();
+                    }
+
                     else
                         $$ = new Exp(static_cast<CallExp*>($1)->type, static_cast<CallExp*>($1)->var);
                     

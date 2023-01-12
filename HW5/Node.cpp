@@ -119,8 +119,8 @@ void Exp::forward_anouncement(const Exp* exp){
 }
 
 //BoolExp
-BoolExp::BoolExp(const std::string& var, bool fresh):
-        Exp("BOOL", var), fresh(fresh){};
+BoolExp::BoolExp(const std::string& var):
+        Exp("BOOL", var){};
 
 std::string BoolExp::emit(){
     string str = "br i1 " + var + ", label @, label @";
