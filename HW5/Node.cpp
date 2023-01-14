@@ -108,7 +108,7 @@ void Exp::selfBPatch() const {
 }
 
 void Exp::anounce(){
-    std::string bpstr = "br label @";
+    std::string bpstr = "br label @ ; redirection label for " + var;
     bp.emplace_back(CodeBuffer::instance().emit(bpstr), FIRST);
     label = CodeBuffer::instance().genLabel();
 }
