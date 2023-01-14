@@ -476,19 +476,26 @@ Call:       ID LPAREN ExpList RPAREN{
                                             if(exp->type == "BOOL")
                                                 varlist.push_back("i1 " + std::dynamic_pointer_cast<BoolExp>(exp)->evaluate());
                                             else if(exp->type == "STRING"){
-                                                varlist.push_back(std::dynamic_pointer_cast<StringExp>(exp)->var);
+                                                varlist.push_back("i8* " + std::dynamic_pointer_cast<StringExp>(exp)->var);
                                             }    
                                             else
                                                 varlist.push_back("i32 " + exp->var);
                                         }
                                         std::string new_var = "";
                                         std::string str = "";
-                                        if(getFuncReturn(entry) != "VOID"){
+                                        std::string ret = getFuncReturn(entry);
+                                        if(ret != "VOID"){
                                             new_var = CodeBuffer::instance().freshVar();
-                                            str = new_var + " = call @" + static_cast<Id*>($1)->name + "(" ;
+                                            str = new_var + " = ";
                                         }
+                                        str += "call ";
+                                        if (ret == "BOOL")
+                                            str+= "i1 ";
+                                        else if(ret == "VOID")
+                                            str+= "void ";
                                         else
-                                            str = "call @" + static_cast<Id*>($1)->name + "(" ;
+                                            str+= "i32 ";
+                                        str += "@" + static_cast<Id*>($1)->name + "(";
                                         for (auto& var: varlist){
                                             str += var + ", ";
                                         }
@@ -498,6 +505,7 @@ Call:       ID LPAREN ExpList RPAREN{
 
                                         $$ = new CallExp(getFuncReturn(entry), new_var);
                                         static_cast<Exp*>($$)->anounce();
+                                        static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
 
                                         CodeBuffer::instance().emit(str);
                                         delete $1;
@@ -522,15 +530,22 @@ Call:       ID LPAREN ExpList RPAREN{
 
                                     std::string new_var = "";
                                     std::string str = "";
-                                    if(getFuncReturn(entry) != "VOID"){
-                                        new_var = CodeBuffer::instance().freshVar();
-                                        str = new_var + " = call @" + static_cast<Id*>($1)->name + "()" ;
+                                    std::string ret = getFuncReturn(entry);
+                                    if( ret!= "VOID"){
+                                            new_var = CodeBuffer::instance().freshVar();
+                                            str = new_var + " = ";
                                     }
+                                    str += "call ";
+                                    if (ret == "BOOL")
+                                        str+= "i1 ";
+                                    else if(ret == "VOID")
+                                        str+= "void ";
                                     else
-                                        str = "call @" + static_cast<Id*>($1)->name + "()" ;
-
+                                        str+= "i32 ";
+                                    str += "@" + static_cast<Id*>($1)->name + "()";
                                     $$ = new CallExp(getFuncReturn(entry), new_var);  
                                     static_cast<Exp*>($$)->anounce();
+                                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
 
                                     CodeBuffer::instance().emit(str);
                                     
@@ -597,6 +612,7 @@ M_Bool_Exp: Exp {
                     static_cast<BoolExp*>($$)->trueList = static_cast<BoolExp*>($1)->trueList;
                     static_cast<BoolExp*>($$)->falseList = static_cast<BoolExp*>($1)->falseList;
                     static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($1)->lastLabel;
                     delete $1;
                 }
 ;
@@ -613,6 +629,7 @@ Exp:    LPAREN Exp RPAREN   {
                                     $$ = new Exp(static_cast<Exp*>($2)->type, static_cast<Exp*>($2)->var);
 
                                 static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($2));
+                                static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($2)->lastLabel;
                                 delete $2;
                             }
                     
@@ -658,12 +675,18 @@ Exp:    LPAREN Exp RPAREN   {
 
                                                 
                                                 if(static_cast<Exp*>($1)->type != "BOOL"){
+                                                    std::string type;
+                                                    if(static_cast<Exp*>($1)->type == "STRING")
+                                                        type = "i8*";
+                                                    else
+                                                        type = "i32";
                                                     std::string var = CodeBuffer::instance().freshVar();
-                                                    std::string str = var + " = phi i32 [ " + static_cast<Exp*>($1)->var + ", %" + static_cast<Exp*>($1)->label + " ], [ " +
-                                                           static_cast<Exp*>($8)->var + ", %" + static_cast<Exp*>($8)->label + " ]";
+                                                    std::string str = var + " = phi " + type + " [ " + static_cast<Exp*>($1)->var + ", %" + static_cast<Exp*>($1)->lastLabel + " ], [ " +
+                                                           static_cast<Exp*>($8)->var + ", %" + static_cast<Exp*>($8)->lastLabel + " ]";
                                                     CodeBuffer::instance().emit(str);
                                                     static_cast<Exp*>($$)->var = var;
                                                 }
+                                                static_cast<Exp*>($$)->lastLabel = static_cast<BoolExp*>($14)->midLabel;
                                                 
                                                 delete $1;
                                                 delete $3;
@@ -710,6 +733,7 @@ Exp:    LPAREN Exp RPAREN   {
                                
                                 static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
                                 static_cast<Exp*>($3)->selfBPatch();
+                                static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
                                 delete $1;
                                 delete $2;
                                 delete $3;
@@ -748,6 +772,7 @@ Exp:    LPAREN Exp RPAREN   {
                                
                                 static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
                                 static_cast<Exp*>($3)->selfBPatch();
+                                static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
                                 delete $1;
                                 delete $2;
                                 delete $3;                            
@@ -773,6 +798,7 @@ Exp:    LPAREN Exp RPAREN   {
                             $$ = new Exp(entry->type, var);
                             static_cast<Exp*>($$)->forward_anouncement(&exp);
                         }
+                        static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
                     }
                     else{
                         output::errorUndef(yylineno, static_cast<Id*>($1)->name);
@@ -798,11 +824,13 @@ Exp:    LPAREN Exp RPAREN   {
                     
 
                     static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($1)->lastLabel;
                     delete $1;
                }
         | NUM   { 
                     $$ = new Exp("INT", std::to_string((static_cast<Num*>($1))->value));
                     static_cast<Exp*>($$)->anounce();
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
                     delete $1;
                 }
         | NUM B {
@@ -814,27 +842,36 @@ Exp:    LPAREN Exp RPAREN   {
                     }
 
                     static_cast<Exp*>($$)->anounce();
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
                     delete $1;
                 }
         | STRING{ 
                     std::string var = CodeBuffer::instance().freshVar();
-                    var = "@." + var.substr(1);
-                    $$ = new StringExp(static_cast<String*>($1)->value, var); 
+                    var = "@." + var.substr(1); 
+                    $$ = new StringExp(static_cast<String*>($1)->value, var);
                     static_cast<StringExp*>($$)->emitGlobalString();
 
                     static_cast<Exp*>($$)->anounce();
+                    var = CodeBuffer::instance().freshVar();
+                    std::string str_size = to_string(static_cast<StringExp*>($$)->value.size()-1);
+                    std::string str = var + " = getelementptr [" + str_size + " x i8], [" + str_size + " x i8]* " + static_cast<StringExp*>($$)->var + ", i32 0, i32 0";
+                    CodeBuffer::instance().emit(str);
+                    static_cast<Exp*>($$)->var = var;
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
                     delete $1;
                 }   
 
         | TRUE  { 
                     $$ = new BoolExp("true");
                     static_cast<Exp*>($$)->anounce();
-                    static_cast<BoolExp*>($$)->emit(); 
+                    static_cast<BoolExp*>($$)->emit();
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label; 
                 }
         | FALSE { 
                     $$ = new BoolExp("false");
                     static_cast<Exp*>($$)->anounce();
                     static_cast<BoolExp*>($$)->emit();  
+                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($$)->label;
                 }
         | NOT Exp   { 
                         if(static_cast<Exp*>($2)->type == "BOOL")
@@ -849,6 +886,7 @@ Exp:    LPAREN Exp RPAREN   {
                         }
                         
                         static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($2));
+                        static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($2)->lastLabel;
                         delete $2; 
                     }
         | Exp AND Exp   {
@@ -862,7 +900,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 exit(0);
                             }
                             static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
-
+                            static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
                             static_cast<Exp*>($3)->selfBPatch();
                             delete $1;
                             delete $3;     
@@ -878,6 +916,7 @@ Exp:    LPAREN Exp RPAREN   {
                             exit(0);
                         }
                         static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
+                        static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
 
                         static_cast<Exp*>($3)->selfBPatch();
                         delete $1;
@@ -895,6 +934,7 @@ Exp:    LPAREN Exp RPAREN   {
                                 exit(0);
                             }
                             static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
+                            static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
                             static_cast<Exp*>($3)->selfBPatch();
                             delete $1;
                             delete $2;                                
@@ -913,6 +953,8 @@ Exp:    LPAREN Exp RPAREN   {
                             }
 
                             static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($1));
+                            static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($3)->lastLabel;
+
                             static_cast<Exp*>($3)->selfBPatch();
                             delete $1;
                             delete $2;
@@ -936,7 +978,7 @@ Exp:    LPAREN Exp RPAREN   {
                                         exit(0);
                                     }
                                     static_cast<Exp*>($$)->forward_anouncement(static_cast<Exp*>($4));
-
+                                    static_cast<Exp*>($$)->lastLabel = static_cast<Exp*>($4)->lastLabel;
                                     delete $2;
                                     delete $4;  
                                 }

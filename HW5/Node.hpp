@@ -39,6 +39,7 @@ struct Exp : public Node {
     std::string var;
     std::vector<std::pair<int,BranchLabelIndex>> bp;
     std::string label;
+    std::string lastLabel;
     Exp(const std::string& type, const std::string& var = "");
     virtual std::string emitOp(const Exp* exp1, const std::string& op,const Exp* exp2);
     void selfBPatch() const;
