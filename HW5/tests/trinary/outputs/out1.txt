@@ -1,0 +1,6 @@
+one_true = 1
+two_t_t = 1
+two_t_f = 1
+one_false = 1
+two_f_t = 1
+two_f_f = 1
